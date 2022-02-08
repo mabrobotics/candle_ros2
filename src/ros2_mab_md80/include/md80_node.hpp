@@ -1,6 +1,8 @@
 #include "candle.hpp"
 
 #include "ros2_mab_md80/msg/impedance_command.hpp"
+#include "ros2_mab_md80/msg/motion_command.hpp"
+
 #include "ros2_mab_md80/srv/add_md80s.hpp"
 #include "ros2_mab_md80/srv/generic_md80_msg.hpp"
 #include "ros2_mab_md80/srv/set_mode_md80s.hpp"
@@ -24,8 +26,9 @@ private:
     rclcpp::Service<ros2_mab_md80::srv::SetModeMd80s>::SharedPtr setModeMd80Service;
     rclcpp::Service<ros2_mab_md80::srv::GenericMd80Msg>::SharedPtr enableMd80Service;
     rclcpp::Service<ros2_mab_md80::srv::GenericMd80Msg>::SharedPtr disableMd80Service;
-    
+
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jointStatePub;
+    rclcpp::Subscription<ros2_mab_md80::msg::MotionCommand>::SharedPtr motionCommandSub;
     
     void service_addMd80(const std::shared_ptr<ros2_mab_md80::srv::AddMd80s::Request> request,
         std::shared_ptr<ros2_mab_md80::srv::AddMd80s::Response> response);
@@ -38,4 +41,5 @@ private:
     void service_disableMd80(const std::shared_ptr<ros2_mab_md80::srv::GenericMd80Msg::Request> request,
         std::shared_ptr<ros2_mab_md80::srv::GenericMd80Msg::Response> response);
     void publishJointStates();
+    void motionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::MotionCommand> msg);
 };

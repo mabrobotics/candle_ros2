@@ -16,7 +16,10 @@ Md80Node::Md80Node() : Node("md80_node")
 	disableMd80Service = this->create_service<ros2_mab_md80::srv::GenericMd80Msg>(this->get_name() + std::string("/disable_md80s"),
 		std::bind(&Md80Node::service_disableMd80, this, std::placeholders::_1, std::placeholders::_2));
 
-	jointStatePub = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
+	motionCommandSub = this->create_subscription<ros2_mab_md80::msg::MotionCommand>("md80/motion_command", 10,
+		std::bind(&Md80Node::motionCommandCallback, this, std::placeholders::_1));
+
+	jointStatePub = this->create_publisher<sensor_msgs::msg::JointState>("md80/joint_states", 10);
 	pubTimer = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Md80Node::publishJointStates, this));
 	pubTimer->cancel();
 	RCLCPP_INFO(this->get_logger(), "md80_node has started.");
@@ -101,6 +104,22 @@ void Md80Node::publishJointStates()
 		jointStateMsg.effort.push_back(md.getTorque());
 	}
 	this->jointStatePub->publish(jointStateMsg);
+}
+void Md80Node::motionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::MotionCommand> msg)
+{
+	if(msg->drive_ids.size() != msg->target_position.size() || msg->drive_ids.size() != msg->target_velocity.size() ||
+		msg->drive_ids.size() != msg->target_torque.size())
+	{
+		RCLCPP_WARN(this->get_logger(), "Motion Command message incomplete. Sizes of arrays do not match! Ignoring message.");
+		return;
+	}
+	for(int i = 0; i < msg->drive_ids.size(); i++)
+	{
+		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
+		md->setTargetPosition(msg->target_position[i]);
+		md->setTargetVelocity(msg->target_velocity[i]);
+		md->setTorque(msg->target_torque[i]);
+	}
 }
 int main(int argc, char **argv)
 {

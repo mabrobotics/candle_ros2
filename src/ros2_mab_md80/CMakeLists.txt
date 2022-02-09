@@ -25,6 +25,9 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(ros2_mab_md80
   "msg/ImpedanceCommand.msg"
   "msg/MotionCommand.msg"
+  "msg/Pid.msg"
+  "msg/VelocityPidCommand.msg"
+  "msg/PositionPidCommand.msg"
   "srv/AddMd80s.srv"
   "srv/GenericMd80Msg.srv"
   "srv/SetModeMd80s.srv"

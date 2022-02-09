@@ -18,11 +18,20 @@ Md80Node::Md80Node() : Node("md80_node")
 
 	motionCommandSub = this->create_subscription<ros2_mab_md80::msg::MotionCommand>("md80/motion_command", 10,
 		std::bind(&Md80Node::motionCommandCallback, this, std::placeholders::_1));
+	impedanceCommandSub = this->create_subscription<ros2_mab_md80::msg::ImpedanceCommand>("md80/impedance_command", 10,
+		std::bind(&Md80Node::impedanceCommandCallback, this, std::placeholders::_1));
+	velocityCommandSub = this->create_subscription<ros2_mab_md80::msg::VelocityPidCommand>("md80/velocity_pid_command", 10,
+		std::bind(&Md80Node::velocityCommandCallback, this, std::placeholders::_1));
+	positionCommandSub = this->create_subscription<ros2_mab_md80::msg::PositionPidCommand>("md80/position_pid_command", 10,
+		std::bind(&Md80Node::positionCommandCallback, this, std::placeholders::_1));
 
 	jointStatePub = this->create_publisher<sensor_msgs::msg::JointState>("md80/joint_states", 10);
 	pubTimer = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Md80Node::publishJointStates, this));
 	pubTimer->cancel();
 	RCLCPP_INFO(this->get_logger(), "md80_node has started.");
+
+	// DEBUG
+	debugPub = this->create_publisher<ros2_mab_md80::msg::PositionPidCommand>("md80/position_pid_command", 10);
 }
 Md80Node::~Md80Node()
 {
@@ -113,12 +122,54 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::M
 		RCLCPP_WARN(this->get_logger(), "Motion Command message incomplete. Sizes of arrays do not match! Ignoring message.");
 		return;
 	}
-	for(int i = 0; i < msg->drive_ids.size(); i++)
+	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
 	{
 		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
 		md->setTargetPosition(msg->target_position[i]);
 		md->setTargetVelocity(msg->target_velocity[i]);
 		md->setTorque(msg->target_torque[i]);
+	}
+}
+void Md80Node::impedanceCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::ImpedanceCommand> msg)
+{
+	if(msg->drive_ids.size() != msg->kp.size() || msg->drive_ids.size() != msg->kd.size())
+	{
+		RCLCPP_WARN(this->get_logger(), "Impedance Command message incomplete. Sizes of arrays do not match! Ignoring message.");
+		return;
+	}
+	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
+	{
+		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
+		md->setImpedanceController(msg->kp[i], msg->kd[i]);
+	}
+}
+void Md80Node::velocityCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::VelocityPidCommand> msg)
+{
+	if(msg->drive_ids.size() != msg->velocity_pid.size())
+	{
+		RCLCPP_WARN(this->get_logger(), "Velocity Command message incomplete. Sizes of arrays do not match! Ignoring message.");
+		return;
+	}
+	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
+	{
+		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
+		md->setVelocityController(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
+	}
+}
+void Md80Node::positionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::PositionPidCommand> msg)
+{
+	if(msg->drive_ids.size() != msg->position_pid.size())
+	{
+		RCLCPP_WARN(this->get_logger(), "Position Command message incomplete. Sizes of arrays do not match! Ignoring message.");
+		return;
+	}
+	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
+	{
+		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
+		md->setPositionController(msg->position_pid[i].kp, msg->position_pid[i].ki, msg->position_pid[i].kd, msg->position_pid[i].i_windup);
+		std::cout << "GOT HERE!" << std::endl;
+		if(i < (int)msg->velocity_pid.size())
+			md->setVelocityController(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
 	}
 }
 int main(int argc, char **argv)

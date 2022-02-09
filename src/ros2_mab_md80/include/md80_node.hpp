@@ -55,7 +55,4 @@ private:
     void impedanceCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::ImpedanceCommand> msg);
     void velocityCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::VelocityPidCommand> msg);
     void positionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::PositionPidCommand> msg);
-
-    //DEBUG
-    rclcpp::Publisher<ros2_mab_md80::msg::PositionPidCommand>::SharedPtr debugPub;
 };

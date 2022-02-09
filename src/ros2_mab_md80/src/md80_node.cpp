@@ -1,6 +1,4 @@
 #include "md80_node.hpp"
-#include "sensor_msgs/msg/joint_state.hpp"
-#include <cstdio>
 
 Md80Node::Md80Node() : Node("md80_node")
 {
@@ -31,9 +29,6 @@ Md80Node::Md80Node() : Node("md80_node")
 	pubTimer = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Md80Node::publishJointStates, this));
 	pubTimer->cancel();
 	RCLCPP_INFO(this->get_logger(), "md80_node has started.");
-
-	// DEBUG
-	debugPub = this->create_publisher<ros2_mab_md80::msg::PositionPidCommand>("md80/position_pid_command", 10);
 }
 Md80Node::~Md80Node()
 {
@@ -192,7 +187,6 @@ void Md80Node::positionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg:
 	{
 		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
 		md->setPositionController(msg->position_pid[i].kp, msg->position_pid[i].ki, msg->position_pid[i].kd, msg->position_pid[i].i_windup);
-		std::cout << "GOT HERE!" << std::endl;
 		if(i < (int)msg->velocity_pid.size())
 			md->setVelocityController(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
 	}

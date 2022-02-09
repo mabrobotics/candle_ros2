@@ -15,6 +15,8 @@ Md80Node::Md80Node() : Node("md80_node")
 		std::bind(&Md80Node::service_enableMd80, this, std::placeholders::_1, std::placeholders::_2));
 	disableMd80Service = this->create_service<ros2_mab_md80::srv::GenericMd80Msg>(this->get_name() + std::string("/disable_md80s"),
 		std::bind(&Md80Node::service_disableMd80, this, std::placeholders::_1, std::placeholders::_2));
+	setLimitsMd80Service = this->create_service<ros2_mab_md80::srv::SetLimitsMd80>(this->get_name() + std::string("/set_limits_md80s"),
+		std::bind(&Md80Node::service_setLimitsMd80, this, std::placeholders::_1, std::placeholders::_2));
 
 	motionCommandSub = this->create_subscription<ros2_mab_md80::msg::MotionCommand>("md80/motion_command", 10,
 		std::bind(&Md80Node::motionCommandCallback, this, std::placeholders::_1));
@@ -62,7 +64,7 @@ void Md80Node::service_setModeMd80(const std::shared_ptr<ros2_mab_md80::srv::Set
 			(void)id;
 			response->drives_success.push_back(false);
 		}
-		RCLCPP_WARN(this->get_logger(), "Number of entires in 'drive_ids' and 'mode' does not match! Ignoring call.");
+		RCLCPP_WARN(this->get_logger(), "SetMode request incomplete. Sizes of arrays do not match!");
 		return;
 	}
 	for(int i = 0; i < (int)request->drive_ids.size(); i++)
@@ -100,6 +102,29 @@ void Md80Node::service_disableMd80(const std::shared_ptr<ros2_mab_md80::srv::Gen
 	pubTimer->cancel();
 	for(auto&id : request->drive_ids)
 		response->drives_success.push_back(candle->controlMd80Enable(id,true));
+}
+void Md80Node::service_setLimitsMd80(const std::shared_ptr<ros2_mab_md80::srv::SetLimitsMd80::Request> request,
+        std::shared_ptr<ros2_mab_md80::srv::SetLimitsMd80::Response> response)
+{
+	if(request->drive_ids.size() != request->torque_limit.size() || request->drive_ids.size() != request->velocity_limit.size())
+	{
+		for (int i = 0; i < (int)request->drive_ids.size(); i++)
+			response->drives_success.push_back(false);
+		RCLCPP_WARN(this->get_logger(), "SetLimits request incomplete. Sizes of arrays do not match!");
+		return;
+	}
+	for (int i = 0; i < (int)request->drive_ids.size(); i++)
+	{
+		auto*md = candle->getMd80FromList(request->drive_ids[i]);
+		if(md == nullptr)
+		{
+			response->drives_success.push_back(false);
+			continue;
+		}
+		md->setMaxTorque(request->torque_limit[i]);
+		md->setMaxVelocity(request->velocity_limit[i]);
+		response->drives_success.push_back(true);
+	}
 }
 void Md80Node::publishJointStates()
 {

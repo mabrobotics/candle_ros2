@@ -17,6 +17,7 @@ endif()
 
 # find dependencies
 find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
@@ -24,14 +25,15 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(ros2_mab_md80
   "msg/ImpedanceCommand.msg"
   "msg/MotionCommand.msg"
+  "msg/Pid.msg"
+  "msg/VelocityPidCommand.msg"
+  "msg/PositionPidCommand.msg"
   "srv/AddMd80s.srv"
-  "srv/ZeroMd80s.srv"
+  "srv/GenericMd80Msg.srv"
   "srv/SetModeMd80s.srv"
+  "srv/SetLimitsMd80.srv"
   DEPENDENCIES builtin_interfaces std_msgs
 )
-
-include_directories("src/")
-
 set(CMAKE_INSTALL_RPATH $ORIGIN)  # sets proper runtime paths for exec to link .so properly
 
 add_executable(md80_node src/md80_node.cpp)
@@ -39,7 +41,7 @@ target_link_libraries(md80_node "${CMAKE_SOURCE_DIR}/lib/libcandle.so")
 target_include_directories(md80_node PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 rosidl_target_interfaces(md80_node ${PROJECT_NAME} "rosidl_typesupport_cpp")  # Links msgs from this very package
-ament_target_dependencies(md80_node rclcpp)
+ament_target_dependencies(md80_node rclcpp sensor_msgs)
 
 install(TARGETS md80_node 
   DESTINATION lib/${PROJECT_NAME}

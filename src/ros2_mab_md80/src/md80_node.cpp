@@ -96,7 +96,7 @@ void Md80Node::service_disableMd80(const std::shared_ptr<ros2_mab_md80::srv::Gen
 	candle->end();
 	pubTimer->cancel();
 	for(auto&id : request->drive_ids)
-		response->drives_success.push_back(candle->controlMd80Enable(id,true));
+		response->drives_success.push_back(candle->controlMd80Enable(id,false));
 }
 void Md80Node::service_setLimitsMd80(const std::shared_ptr<ros2_mab_md80::srv::SetLimitsMd80::Request> request,
         std::shared_ptr<ros2_mab_md80::srv::SetLimitsMd80::Response> response)

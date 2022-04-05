@@ -110,15 +110,17 @@ void Md80Node::service_setLimitsMd80(const std::shared_ptr<ros2_mab_md80::srv::S
 	}
 	for (int i = 0; i < (int)request->drive_ids.size(); i++)
 	{
-		auto*md = candle->getMd80FromList(request->drive_ids[i]);
-		if(md == nullptr)
+		try
+		{
+			auto&md = candle->getMd80FromList(request->drive_ids[i]);
+			md.setMaxTorque(request->torque_limit[i]);
+			md.setMaxVelocity(request->velocity_limit[i]);
+			response->drives_success.push_back(true);
+		}
+		catch(const std::exception& e)
 		{
 			response->drives_success.push_back(false);
-			continue;
 		}
-		md->setMaxTorque(request->torque_limit[i]);
-		md->setMaxVelocity(request->velocity_limit[i]);
-		response->drives_success.push_back(true);
 	}
 }
 void Md80Node::publishJointStates()
@@ -144,10 +146,19 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::M
 	}
 	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
 	{
-		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
-		md->setTargetPosition(msg->target_position[i]);
-		md->setTargetVelocity(msg->target_velocity[i]);
-		md->setTorque(msg->target_torque[i]);
+		try
+		{
+			auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+			md.setTargetPosition(msg->target_position[i]);
+			md.setTargetVelocity(msg->target_velocity[i]);
+			md.setTorque(msg->target_torque[i]);
+		}
+		catch(const char* eMsg)
+		{
+			RCLCPP_WARN(this->get_logger(), eMsg);
+		}
+		
+
 	}
 }
 void Md80Node::impedanceCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::ImpedanceCommand> msg)
@@ -159,8 +170,15 @@ void Md80Node::impedanceCommandCallback(const std::shared_ptr<ros2_mab_md80::msg
 	}
 	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
 	{
-		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
-		md->setImpedanceController(msg->kp[i], msg->kd[i]);
+		try
+		{
+			auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+			md.setImpedanceControllerParams(msg->kp[i], msg->kd[i]);
+		}
+		catch(const char* eMsg)
+		{
+			RCLCPP_WARN(this->get_logger(), eMsg);
+		}	
 	}
 }
 void Md80Node::velocityCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::VelocityPidCommand> msg)
@@ -172,8 +190,15 @@ void Md80Node::velocityCommandCallback(const std::shared_ptr<ros2_mab_md80::msg:
 	}
 	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
 	{
-		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
-		md->setVelocityController(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
+		try
+		{
+			auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+			md.setVelocityControllerParams(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
+		}
+		catch(const char* eMsg)
+		{
+			RCLCPP_WARN(this->get_logger(), eMsg);
+		}	
 	}
 }
 void Md80Node::positionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::PositionPidCommand> msg)
@@ -185,10 +210,18 @@ void Md80Node::positionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg:
 	}
 	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
 	{
-		auto*md = candle->getMd80FromList(msg->drive_ids[i]);
-		md->setPositionController(msg->position_pid[i].kp, msg->position_pid[i].ki, msg->position_pid[i].kd, msg->position_pid[i].i_windup);
-		if(i < (int)msg->velocity_pid.size())
-			md->setVelocityController(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
+		try
+		{
+			auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+			md.setPositionControllerParams(msg->position_pid[i].kp, msg->position_pid[i].ki, msg->position_pid[i].kd, msg->position_pid[i].i_windup);
+			if(i < (int)msg->velocity_pid.size())
+				md.setVelocityControllerParams(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
+		}
+		catch(const char* eMsg)
+		{
+			RCLCPP_WARN(this->get_logger(), eMsg);
+		}	
+
 	}
 }
 int main(int argc, char **argv)

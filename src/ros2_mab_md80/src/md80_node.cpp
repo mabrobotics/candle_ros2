@@ -1,5 +1,7 @@
 #include "md80_node.hpp"
 
+const std::string version = "v1.0";
+
 Md80Node::Md80Node() : Node("md80_node")
 {
 	candle = new mab::Candle(mab::CANdleBaudrate_E::CAN_BAUD_1M, true);
@@ -28,7 +30,7 @@ Md80Node::Md80Node() : Node("md80_node")
 	jointStatePub = this->create_publisher<sensor_msgs::msg::JointState>("md80/joint_states", 10);
 	pubTimer = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Md80Node::publishJointStates, this));
 	pubTimer->cancel();
-	RCLCPP_INFO(this->get_logger(), "md80_node has started.");
+	RCLCPP_INFO(this->get_logger(), "md80_node %s has started.", version.c_str());
 }
 Md80Node::~Md80Node()
 {

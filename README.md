@@ -30,7 +30,7 @@ After starting the node, it will wait for configuration messages.
 Firstly, the node should be informed which drives should be present on the FDCAN bus. This can be done via `/add_md80s` service.
 For example:
 ```
-ros2 service call /md80_node/add_md80s candle_ros2/srv/AddMd80s "drive_ids: [81, 97]"
+ros2 service call /candle_ros2_node/add_md80s candle_ros2/srv/AddMd80s "drive_ids: [81, 97]"
 ```
 Should produce the following output:
 ```
@@ -46,7 +46,7 @@ informing, that both drives (ids: 81 and 97), have been successfully contacted, 
 Next the desired control mode should be selected. This is accomplished with `/set_mode_md80s` service.
 For example:
 ```
-ros2 service call /md80_node/set_mode_md80s candle_ros2/srv/SetModeMd80s "{drive_ids: [81, 97], mode:["IMPEDANCE", "IMPEDANCE"]}"
+ros2 service call /candle_ros2_node/set_mode_md80s candle_ros2/srv/SetModeMd80s "{drive_ids: [81, 97], mode:["IMPEDANCE", "IMPEDANCE"]}"
 ```
 Should produce:
 ```
@@ -60,7 +60,7 @@ Informing that for both drives mode has been set correctly.
 ### Set Zero 
 Often when starting, setting a current position to zero is desired. This can be accomplished with a call to `/zero_md80s` service.
 ```
-ros2 service call /md80_node/zero_md80s candle_ros2/srv/GenericMd80Msg "{drive_ids:[81, 97]}"
+ros2 service call /candle_ros2_node/zero_md80s candle_ros2/srv/GenericMd80Msg "{drive_ids:[81, 97]}"
 ```
 
 ### Enabling/Disabling drives
@@ -70,6 +70,12 @@ Using services `/enable_md80s` and `/disable_md80s` the drives and the node publ
 After enabling, the node will publish current joint states to `/md80/joint_states` at a frequency of 100Hz. Joint names are generated based on drive ID, for example, a drive with id 546 will be called `Joint 546`.
 
 The node will also listen for the messages on topics for controlling the drives. All of the above topics are listened to all the time, but currently applied settings are dependent on the md80 mode set before enabling.
+
+```
+ros2 service call /candle_ros2_node/enable_md80s candle_ros2/srv/GenericMd80Msg "{drive_ids:[81, 97]}"
+
+ros2 service call /candle_ros2_node/disable_md80s candle_ros2/srv/GenericMd80Msg "{drive_ids:[81, 97]}"
+```
 
 ### Controlling drives
 Controlling the drives is done via the four topics listed above. For commands to be viable, all fields of each message must be filled properly. For example, to set up custom gains for IMPEDANCE mode use:

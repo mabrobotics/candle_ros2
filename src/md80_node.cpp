@@ -1,8 +1,8 @@
 #include "md80_node.hpp"
 
-const std::string version = "v1.0";
+const std::string version = "v1.1";
 
-Md80Node::Md80Node() : Node("md80_node")
+Md80Node::Md80Node() : Node("candle_ros2_node")
 {
 	candle = new mab::Candle(mab::CANdleBaudrate_E::CAN_BAUD_1M, true);
 	addMd80Service = this->create_service<candle_ros2::srv::AddMd80s>(this->get_name() + std::string("/add_md80s"),
@@ -28,12 +28,12 @@ Md80Node::Md80Node() : Node("md80_node")
 	jointStatePub = this->create_publisher<sensor_msgs::msg::JointState>("md80/joint_states", 10);
 	pubTimer = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Md80Node::publishJointStates, this));
 	pubTimer->cancel();
-	RCLCPP_INFO(this->get_logger(), "md80_node %s has started.", version.c_str());
+	RCLCPP_INFO(this->get_logger(), "candle_ros2_node %s has started.", version.c_str());
 }
 Md80Node::~Md80Node()
 {
 	delete candle;
-	RCLCPP_INFO(this->get_logger(), "md80_node finished.");
+	RCLCPP_INFO(this->get_logger(), "candle_ros2_node finished.");
 }
 void Md80Node::service_addMd80(const std::shared_ptr<candle_ros2::srv::AddMd80s::Request> request,
 					std::shared_ptr<candle_ros2::srv::AddMd80s::Response> response)

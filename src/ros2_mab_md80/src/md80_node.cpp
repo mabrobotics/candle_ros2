@@ -15,8 +15,6 @@ Md80Node::Md80Node() : Node("md80_node")
 		std::bind(&Md80Node::service_enableMd80, this, std::placeholders::_1, std::placeholders::_2));
 	disableMd80Service = this->create_service<ros2_mab_md80::srv::GenericMd80Msg>(this->get_name() + std::string("/disable_md80s"),
 		std::bind(&Md80Node::service_disableMd80, this, std::placeholders::_1, std::placeholders::_2));
-	setLimitsMd80Service = this->create_service<ros2_mab_md80::srv::SetLimitsMd80>(this->get_name() + std::string("/set_limits_md80s"),
-		std::bind(&Md80Node::service_setLimitsMd80, this, std::placeholders::_1, std::placeholders::_2));
 
 	motionCommandSub = this->create_subscription<ros2_mab_md80::msg::MotionCommand>("md80/motion_command", 10,
 		std::bind(&Md80Node::motionCommandCallback, this, std::placeholders::_1));
@@ -100,31 +98,6 @@ void Md80Node::service_disableMd80(const std::shared_ptr<ros2_mab_md80::srv::Gen
 	for(auto&id : request->drive_ids)
 		response->drives_success.push_back(candle->controlMd80Enable(id,false));
 }
-void Md80Node::service_setLimitsMd80(const std::shared_ptr<ros2_mab_md80::srv::SetLimitsMd80::Request> request,
-        std::shared_ptr<ros2_mab_md80::srv::SetLimitsMd80::Response> response)
-{
-	if(request->drive_ids.size() != request->torque_limit.size() || request->drive_ids.size() != request->velocity_limit.size())
-	{
-		for (int i = 0; i < (int)request->drive_ids.size(); i++)
-			response->drives_success.push_back(false);
-		RCLCPP_WARN(this->get_logger(), "SetLimits request incomplete. Sizes of arrays do not match!");
-		return;
-	}
-	for (int i = 0; i < (int)request->drive_ids.size(); i++)
-	{
-		try
-		{
-			auto&md = candle->getMd80FromList(request->drive_ids[i]);
-			md.setMaxTorque(request->torque_limit[i]);
-			md.setMaxVelocity(request->velocity_limit[i]);
-			response->drives_success.push_back(true);
-		}
-		catch(const std::exception& e)
-		{
-			response->drives_success.push_back(false);
-		}
-	}
-}
 void Md80Node::publishJointStates()
 {
 	sensor_msgs::msg::JointState jointStateMsg;
@@ -176,6 +149,7 @@ void Md80Node::impedanceCommandCallback(const std::shared_ptr<ros2_mab_md80::msg
 		{
 			auto&md = candle->getMd80FromList(msg->drive_ids[i]);
 			md.setImpedanceControllerParams(msg->kp[i], msg->kd[i]);
+			md.setMaxTorque(msg->max_output[i]);
 		}
 		catch(const char* eMsg)
 		{
@@ -196,6 +170,7 @@ void Md80Node::velocityCommandCallback(const std::shared_ptr<ros2_mab_md80::msg:
 		{
 			auto&md = candle->getMd80FromList(msg->drive_ids[i]);
 			md.setVelocityControllerParams(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
+			md.setMaxTorque(msg->velocity_pid[i].max_output);
 		}
 		catch(const char* eMsg)
 		{
@@ -216,8 +191,10 @@ void Md80Node::positionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg:
 		{
 			auto&md = candle->getMd80FromList(msg->drive_ids[i]);
 			md.setPositionControllerParams(msg->position_pid[i].kp, msg->position_pid[i].ki, msg->position_pid[i].kd, msg->position_pid[i].i_windup);
+			md.setMaxVelocity(msg->position_pid[i].max_output);
 			if(i < (int)msg->velocity_pid.size())
 				md.setVelocityControllerParams(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
+				md.setMaxTorque(msg->velocity_pid[i].max_output);
 		}
 		catch(const char* eMsg)
 		{

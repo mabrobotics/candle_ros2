@@ -1,4 +1,4 @@
-#include "candle.hpp"
+#include "Candle/candle.hpp"
 
 #include "candle_ros2/msg/impedance_command.hpp"
 #include "candle_ros2/msg/motion_command.hpp"

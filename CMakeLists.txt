@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ros2_mab_md80)
+project(candle_ros2)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -22,7 +22,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-rosidl_generate_interfaces(ros2_mab_md80
+rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ImpedanceCommand.msg"
   "msg/MotionCommand.msg"
   "msg/Pid.msg"
@@ -36,14 +36,14 @@ rosidl_generate_interfaces(ros2_mab_md80
 )
 set(CMAKE_INSTALL_RPATH $ORIGIN)  # sets proper runtime paths for exec to link .so properly
 
-add_executable(md80_node src/md80_node.cpp)
-target_link_libraries(md80_node "${CMAKE_SOURCE_DIR}/lib/libcandle.so")
-target_include_directories(md80_node PUBLIC ${CMAKE_SOURCE_DIR}/include)
+add_executable(${PROJECT_NAME}_node src/md80_node.cpp)
+target_link_libraries(${PROJECT_NAME}_node "${CMAKE_SOURCE_DIR}/lib/libcandle.so")
+target_include_directories(${PROJECT_NAME}_node PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
-rosidl_target_interfaces(md80_node ${PROJECT_NAME} "rosidl_typesupport_cpp")  # Links msgs from this very package
-ament_target_dependencies(md80_node rclcpp sensor_msgs)
+rosidl_target_interfaces(${PROJECT_NAME}_node ${PROJECT_NAME} "rosidl_typesupport_cpp")  # Links msgs from this very package
+ament_target_dependencies(${PROJECT_NAME}_node rclcpp sensor_msgs)
 
-install(TARGETS md80_node 
+install(TARGETS ${PROJECT_NAME}_node 
   DESTINATION lib/${PROJECT_NAME}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
   )

@@ -47,8 +47,6 @@ private:
         std::shared_ptr<ros2_mab_md80::srv::GenericMd80Msg::Response> response);
     void service_disableMd80(const std::shared_ptr<ros2_mab_md80::srv::GenericMd80Msg::Request> request,
         std::shared_ptr<ros2_mab_md80::srv::GenericMd80Msg::Response> response);
-    void service_setLimitsMd80(const std::shared_ptr<ros2_mab_md80::srv::SetLimitsMd80::Request> request,
-        std::shared_ptr<ros2_mab_md80::srv::SetLimitsMd80::Response> response);
 
     void publishJointStates();
     void motionCommandCallback(const std::shared_ptr<ros2_mab_md80::msg::MotionCommand> msg);

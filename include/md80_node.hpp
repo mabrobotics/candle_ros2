@@ -20,8 +20,7 @@ public:
     ~Md80Node();
 
 private:
-    mab::Candle*candle;
-
+    std::vector<mab::Candle*> candleInstances;
     rclcpp::TimerBase::SharedPtr pubTimer;
     
     rclcpp::Service<candle_ros2::srv::AddMd80s>::SharedPtr addMd80Service;
@@ -48,6 +47,7 @@ private:
     void service_disableMd80(const std::shared_ptr<candle_ros2::srv::GenericMd80Msg::Request> request,
         std::shared_ptr<candle_ros2::srv::GenericMd80Msg::Response> response);
 
+    mab::Candle* findCandleByMd80Id(uint16_t md80Id);
     void publishJointStates();
     void motionCommandCallback(const std::shared_ptr<candle_ros2::msg::MotionCommand> msg);
     void impedanceCommandCallback(const std::shared_ptr<candle_ros2::msg::ImpedanceCommand> msg);

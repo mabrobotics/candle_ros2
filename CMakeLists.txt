@@ -43,7 +43,15 @@ target_include_directories(${PROJECT_NAME}_node PUBLIC ${CMAKE_SOURCE_DIR}/inclu
 rosidl_target_interfaces(${PROJECT_NAME}_node ${PROJECT_NAME} "rosidl_typesupport_cpp")  # Links msgs from this very package
 ament_target_dependencies(${PROJECT_NAME}_node rclcpp sensor_msgs)
 
-install(TARGETS ${PROJECT_NAME}_node 
+add_executable(${PROJECT_NAME}_sim_node src/md80_sim_node.cpp)
+target_link_libraries(${PROJECT_NAME}_sim_node "${CMAKE_SOURCE_DIR}/lib/libcandle.so")
+target_include_directories(${PROJECT_NAME}_sim_node PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+rosidl_target_interfaces(${PROJECT_NAME}_sim_node ${PROJECT_NAME} "rosidl_typesupport_cpp")  # Links msgs from this very package
+ament_target_dependencies(${PROJECT_NAME}_sim_node rclcpp sensor_msgs)
+
+
+install(TARGETS ${PROJECT_NAME}_node ${PROJECT_NAME}_sim_node 
   DESTINATION lib/${PROJECT_NAME}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
   )

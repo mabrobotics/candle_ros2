@@ -46,7 +46,7 @@ Md80Node::Md80Node() : Node("candle_ros2_node")
 	jointStatePub = this->create_publisher<sensor_msgs::msg::JointState>("md80/joint_states", 1);
 
 
-	pubTimer = this->create_wall_timer(std::chrono::milliseconds(2), std::bind(&Md80Node::publishJointStates, this));
+	pubTimer = this->create_wall_timer(std::chrono::milliseconds(4), std::bind(&Md80Node::publishJointStates, this));
 	pubTimer->cancel();
 	RCLCPP_INFO(this->get_logger(), "candle_ros2_node %s has started.", version.c_str());
 }
@@ -244,7 +244,8 @@ void Md80Node::publishJointStates()
 void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::MotionCommand> msg)
 {
 	if(msg->drive_ids.size() != msg->target_position.size() || msg->drive_ids.size() != msg->target_velocity.size() ||
-		msg->drive_ids.size() != msg->target_torque.size())
+		msg->drive_ids.size() != msg->target_torque.size() ||
+		msg->drive_ids.size() != msg->kp.size() || msg->drive_ids.size() != msg->kd.size())
 	{
 		RCLCPP_WARN(this->get_logger(), "Motion Command message incomplete. Sizes of arrays do not match! Ignoring message.");
 		return;
@@ -264,6 +265,7 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::Mot
 				md.setTargetPosition(msg->target_position[i]);
 				md.setTargetVelocity(msg->target_velocity[i]);
 				md.setTorque(msg->target_torque[i]);
+				md.setImpedanceControllerParams(msg->kp[i], msg->kd[i]);
 			}
 			else RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg->drive_ids[i]);
 		}

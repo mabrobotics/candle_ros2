@@ -142,7 +142,8 @@ void Md80Node::publishJointStates()
 void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::MotionCommand> msg)
 {
 	if(msg->drive_ids.size() != msg->target_position.size() || msg->drive_ids.size() != msg->target_velocity.size() ||
-		msg->drive_ids.size() != msg->target_torque.size())
+		msg->drive_ids.size() != msg->target_torque.size() ||
+		msg->drive_ids.size() != msg->kp.size() || msg->drive_ids.size() != msg->kd.size())
 	{
 		RCLCPP_WARN(this->get_logger(), "Motion Command message incomplete. Sizes of arrays do not match! Ignoring message.");
 		return;
@@ -155,11 +156,14 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::Mot
 	{
 		try
 		{
-			RCLCPP_INFO(this->get_logger(), "id: %d, pos: %f, vel: %f, torque: %f",
+			RCLCPP_INFO(this->get_logger(), "id: %d, pos: %f, vel: %f, torque: %f, kp %f, kd %f",
 			msg->drive_ids[i], 
 			msg->target_position[i], 
 			msg->target_velocity[i], 
-			msg->target_torque[i]);
+			msg->target_torque[i],
+			msg->kp[i],
+			msg->kd[i]
+			);
 		}
 		catch(const char* eMsg)
 		{

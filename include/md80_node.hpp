@@ -6,14 +6,15 @@
 #include "candle_ros2/msg/motion_command.hpp"
 #include "candle_ros2/msg/velocity_pid_command.hpp"
 #include "candle_ros2/msg/position_pid_command.hpp"
+#include "candle_ros2/msg/candle_joint_state.hpp"
 
 #include "candle_ros2/srv/add_md80s.hpp"
 #include "candle_ros2/srv/generic_md80_msg.hpp"
 #include "candle_ros2/srv/set_mode_md80s.hpp"
 #include "candle_ros2/srv/set_limits_md80.hpp"
 
+
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/joint_state.hpp>
 
 class Md80Node : public rclcpp::Node
 {
@@ -33,7 +34,7 @@ private:
     rclcpp::Service<candle_ros2::srv::GenericMd80Msg>::SharedPtr disableMd80Service;
     rclcpp::Service<candle_ros2::srv::SetLimitsMd80>::SharedPtr setLimitsMd80Service;
 
-    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jointStatePub;
+    rclcpp::Publisher<candle_ros2::msg::CandleJointState>::SharedPtr jointStatePub;
     rclcpp::Subscription<candle_ros2::msg::MotionCommand>::SharedPtr motionCommandSub;
     rclcpp::Subscription<candle_ros2::msg::ImpedanceCommand>::SharedPtr impedanceCommandSub;
     rclcpp::Subscription<candle_ros2::msg::VelocityPidCommand>::SharedPtr velocityCommandSub;

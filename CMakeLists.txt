@@ -28,6 +28,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Pid.msg"
   "msg/VelocityPidCommand.msg"
   "msg/PositionPidCommand.msg"
+  "msg/CandleJointState.msg"
   "srv/AddMd80s.srv"
   "srv/GenericMd80Msg.srv"
   "srv/SetModeMd80s.srv"

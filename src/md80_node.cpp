@@ -7,7 +7,8 @@ Md80Node::Md80Node() : Node("candle_ros2_node")
 	{
 		try
 		{
-			auto candle = new mab::Candle(mab::CAN_BAUD_1M, true, mab::CANdleFastMode_E::NORMAL, false);
+			auto candle = new mab::Candle(mab::CAN_BAUD_1M, true, true, mab::CANdleFastMode_E::NORMAL, false);
+
 			std::cout<<"[CANDLE] Found CANdle with ID: "<<candle->getUsbDeviceId()<<std::endl;
 			candleInstances.push_back(candle);
 		}
@@ -43,7 +44,7 @@ Md80Node::Md80Node() : Node("candle_ros2_node")
 	positionCommandSub = this->create_subscription<candle_ros2::msg::PositionPidCommand>("md80/position_pid_command", 10,
 		std::bind(&Md80Node::positionCommandCallback, this, std::placeholders::_1));
 	
-	jointStatePub = this->create_publisher<sensor_msgs::msg::JointState>("md80/joint_states", 1);
+	jointStatePub = this->create_publisher<candle_ros2::msg::CandleJointState>("md80/joint_states", 1);
 
 
 	pubTimer = this->create_wall_timer(std::chrono::milliseconds(4), std::bind(&Md80Node::publishJointStates, this));
@@ -226,16 +227,20 @@ void Md80Node::service_disableMd80(const std::shared_ptr<candle_ros2::srv::Gener
 }
 void Md80Node::publishJointStates()
 {
-	sensor_msgs::msg::JointState jointStateMsg;
+	candle_ros2::msg::CandleJointState jointStateMsg;
 	jointStateMsg.header.stamp = rclcpp::Clock().now();
 	for(auto candle : candleInstances)
 	{
 		for(auto&md : candle->md80s)
 		{
+		    MotorStatus_T motorStatus = md.getMotorStatus();
 			jointStateMsg.name.push_back(std::string("Joint " + std::to_string(md.getId())));
-			jointStateMsg.position.push_back(md.getPosition());
-			jointStateMsg.velocity.push_back(md.getVelocity());
-			jointStateMsg.effort.push_back(md.getTorque());
+			jointStateMsg.position.push_back(motorStatus["position"]);
+			jointStateMsg.velocity.push_back(motorStatus["velocity"]);
+			jointStateMsg.effort.push_back(motorStatus["torque"]);
+			jointStateMsg.frame_ids.push_back(motorStatus["seq"]);
+			jointStateMsg.time_stamps.push_back(motorStatus["time"]);
+
 		}
 	}
 
@@ -253,7 +258,7 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::Mot
 
 	builtin_interfaces::msg::Time t = rclcpp::Clock().now();
     logFile << msg->header.frame_id << "," << t.sec << "," << t.nanosec << "\n";
-
+    RCLCPP_INFO(this->get_logger(), "this is frame_id %s", msg->header.frame_id);
 	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
 	{
 		try
@@ -262,6 +267,7 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::Mot
 			if(candle != NULL)
 			{
 				auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+				md.setFrameId(std::stoi(msg->header.frame_id));
 				md.setTargetPosition(msg->target_position[i]);
 				md.setTargetVelocity(msg->target_velocity[i]);
 				md.setTorque(msg->target_torque[i]);

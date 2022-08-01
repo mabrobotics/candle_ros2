@@ -258,7 +258,6 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::Mot
 
 	builtin_interfaces::msg::Time t = rclcpp::Clock().now();
     logFile << msg->header.frame_id << "," << t.sec << "," << t.nanosec << "\n";
-    RCLCPP_INFO(this->get_logger(), "this is frame_id %s", msg->header.frame_id);
 	for(int i = 0; i < (int)msg->drive_ids.size(); i++)
 	{
 		try

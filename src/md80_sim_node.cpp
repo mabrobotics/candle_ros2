@@ -29,7 +29,7 @@ Md80Node::Md80Node() : Node("candle_ros2_node")
 	positionCommandSub = this->create_subscription<candle_ros2::msg::PositionPidCommand>("md80/position_pid_command", 10,
 		std::bind(&Md80Node::positionCommandCallback, this, std::placeholders::_1));
 
-	jointStatePub = this->create_publisher<sensor_msgs::msg::JointState>("md80/joint_states", 10);
+	jointStatePub = this->create_publisher<candle_ros2::msg::CandleJointState>("md80/joint_states", 1);
 	pubTimer = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Md80Node::publishJointStates, this));
 	pubTimer->cancel();
 	RCLCPP_INFO(this->get_logger(), "candle_ros2_node %s has started.", version.c_str());
@@ -125,16 +125,17 @@ void Md80Node::service_disableMd80(const std::shared_ptr<candle_ros2::srv::Gener
 void Md80Node::publishJointStates()
 {
 
-	sensor_msgs::msg::JointState jointStateMsg;
+	candle_ros2::msg::CandleJointState jointStateMsg;
 	jointStateMsg.header.stamp = rclcpp::Clock().now();
 
 	for(auto i : motors)
 	{
-
-		jointStateMsg.name.push_back(std::string("Joint " + std::to_string(i)));
+		jointStateMsg.name.push_back(std::to_string(i));
 		jointStateMsg.position.push_back(0.01);
 		jointStateMsg.velocity.push_back(0.02);
 		jointStateMsg.effort.push_back(0.03);
+		jointStateMsg.frame_ids.push_back(1);
+		jointStateMsg.time_stamps.push_back(166666.11);
 	}
 	this->jointStatePub->publish(jointStateMsg);
 }

@@ -234,7 +234,7 @@ void Md80Node::publishJointStates()
 		for(auto&md : candle->md80s)
 		{
 		    MotorStatus_T motorStatus = md.getMotorStatus();
-			jointStateMsg.name.push_back(std::string("Joint " + std::to_string(md.getId())));
+			jointStateMsg.name.push_back(std::to_string(md.getId()));
 			jointStateMsg.position.push_back(motorStatus["position"]);
 			jointStateMsg.velocity.push_back(motorStatus["velocity"]);
 			jointStateMsg.effort.push_back(motorStatus["torque"]);

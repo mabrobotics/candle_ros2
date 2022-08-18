@@ -157,6 +157,16 @@ namespace mab
          * @return float torque in Nm (Newton-meters)
          */
         float getTorque() { return torque; };
+        /**
+         * @brief Get the Velocity of md80
+         * @return float angular velocity in rad/s (radians per second)
+         */
+        float getKP() { return impedanceController.kp; };
+        /**
+         * @brief Get the Velocity of md80
+         * @return float angular velocity in rad/s (radians per second)
+         */
+        float getKD() { return impedanceController.kd; };
 
         MotorStatus_T getMotorStatus() { return motorStatus; };
         /**

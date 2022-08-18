@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "mab_types.hpp"
@@ -199,4 +198,3 @@ namespace mab
         void __setControlMode(Md80Mode_E mode);
     };
 }
-

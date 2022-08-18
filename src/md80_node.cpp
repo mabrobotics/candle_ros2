@@ -62,9 +62,9 @@ mab::Candle* Md80Node::findCandleByMd80Id(uint16_t md80Id)
 {
 	for(auto candle : candleInstances)
 	{
-		for(auto id : candle->md80s)
+		for(auto mdPair : candle->md80s)
 		{
-			if(id.getId() == md80Id)return candle;
+			if(mdPair.second.getId() == md80Id)return candle;
 		}
 	}
 	return NULL;
@@ -231,10 +231,10 @@ void Md80Node::publishJointStates()
 	jointStateMsg.header.stamp = rclcpp::Clock().now();
 	for(auto candle : candleInstances)
 	{
-		for(auto&md : candle->md80s)
+		for(auto mdPair : candle->md80s)
 		{
-		    MotorStatus_T motorStatus = md.getMotorStatus();
-			jointStateMsg.name.push_back(std::to_string(md.getId()));
+		    MotorStatus_T motorStatus = mdPair.second.getMotorStatus();
+			jointStateMsg.name.push_back(std::to_string(mdPair.first));
 			jointStateMsg.position.push_back(motorStatus["position"]);
 			jointStateMsg.velocity.push_back(motorStatus["velocity"]);
 			jointStateMsg.effort.push_back(motorStatus["torque"]);
@@ -265,7 +265,7 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::Mot
 			auto candle = findCandleByMd80Id(msg->drive_ids[i]);
 			if(candle != NULL)
 			{
-				auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+				auto&md = candle->md80s.at(msg->drive_ids[i]);
 				md.setFrameId(std::stoi(msg->header.frame_id));
 				md.setTargetPosition(msg->target_position[i]);
 				md.setTargetVelocity(msg->target_velocity[i]);
@@ -294,7 +294,7 @@ void Md80Node::impedanceCommandCallback(const std::shared_ptr<candle_ros2::msg::
 			auto candle = findCandleByMd80Id(msg->drive_ids[i]);
 			if(candle!= NULL)
 			{
-				auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+				auto&md = candle->md80s.at(msg->drive_ids[i]);
 				md.setImpedanceControllerParams(msg->kp[i], msg->kd[i]);
 				md.setMaxTorque(msg->max_output[i]);
 			}
@@ -320,7 +320,7 @@ void Md80Node::velocityCommandCallback(const std::shared_ptr<candle_ros2::msg::V
 			auto candle = findCandleByMd80Id(msg->drive_ids[i]);
 			if(candle!= NULL)
 			{
-				auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+				auto&md = candle->md80s.at(msg->drive_ids[i]);
 				md.setVelocityControllerParams(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);
 				md.setMaxTorque(msg->velocity_pid[i].max_output);
 			}
@@ -346,7 +346,7 @@ void Md80Node::positionCommandCallback(const std::shared_ptr<candle_ros2::msg::P
 			auto candle = findCandleByMd80Id(msg->drive_ids[i]);
 			if(candle!= NULL)
 			{
-				auto&md = candle->getMd80FromList(msg->drive_ids[i]);
+				auto&md = candle->md80s.at(msg->drive_ids[i]);
 				md.setPositionControllerParams(msg->position_pid[i].kp, msg->position_pid[i].ki, msg->position_pid[i].kd, msg->position_pid[i].i_windup);
 				md.setMaxVelocity(msg->position_pid[i].max_output);
 				if(i < (int)msg->velocity_pid.size())

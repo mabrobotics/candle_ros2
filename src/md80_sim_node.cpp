@@ -41,10 +41,25 @@ Md80Node::~Md80Node()
 void Md80Node::service_addMd80(const std::shared_ptr<candle_ros2::srv::AddMd80s::Request> request,
 					std::shared_ptr<candle_ros2::srv::AddMd80s::Response> response)
 { 
-	for(auto id : request->drive_ids){
+	for(int i = 0; i < (int)request->drive_ids.size(); i++)
+	{
 		response->drives_success.push_back(true);
-		motors.push_back(id);
-		RCLCPP_INFO(this->get_logger(), "added motors: '%d'", id);
+		motors.push_back(request->drive_ids[i]);
+		MotorCommand_T config;
+        config["kp"] = request->watchdog_kp[i];
+        config["torque_offset"] = request->torque_offset[i];
+        config["soft_limit"] = request->soft_limit[i];
+        config["max_position"] = request->max_position[i];
+        config["min_position"] = request->min_position[i];
+        config["pos_percent_wanted"] = request->pos_percent_wanted[i];
+
+		RCLCPP_INFO(this->get_logger(), "added motors: '%d', kp: %f, torque_offset: %f, soft: %f, max: %f, min: %f, percent: %f",
+		request->drive_ids[i], config["kp"],
+		config["torque_offset"],
+		config["soft_limit"],
+		config["max_position"],
+		config["min_position"],
+		config["pos_percent_wanted"]);
 	}
 
 	response->total_number_of_drives = response->drives_success.size();

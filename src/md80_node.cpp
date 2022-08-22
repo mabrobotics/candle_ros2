@@ -73,14 +73,23 @@ mab::Candle* Md80Node::findCandleByMd80Id(uint16_t md80Id)
 void Md80Node::service_addMd80(const std::shared_ptr<candle_ros2::srv::AddMd80s::Request> request,
 					std::shared_ptr<candle_ros2::srv::AddMd80s::Response> response)
 { 
-	for(auto&id : request->drive_ids)
+	for(int i = 0; i < (int)request->drive_ids.size(); i++)
 	{
+	    int id = request->drive_ids[i];
+		MotorCommand_T config;
+        config["kp"] = request->watchdog_kp[i];
+        config["torque_offset"] = request->torque_offset[i];
+        config["soft_limit"] = request->soft_limit[i];
+        config["max_position"] = request->max_position[i];
+        config["min_position"] = request->min_position[i];
+        config["pos_percent_wanted"] = request->pos_percent_wanted[i];
+
 		unsigned int md80NotFound = 0;
 		unsigned int md80Found = 0;
 
 		for(auto candle : candleInstances)
 		{
-			if(candle->addMd80(id,false) == true)
+			if(candle->addMd80(id,config, false) == true)
 			{
 				response->drives_success.push_back(true);
 				md80Found++;
@@ -270,7 +279,7 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::Mot
 				md.setTargetPosition(msg->target_position[i]);
 				md.setTargetVelocity(msg->target_velocity[i]);
 				md.setTorque(msg->target_torque[i]);
-				md.setImpedanceControllerParams(msg->kp[i], msg->kd[i]);
+				md.setImpedanceRequestedControllerParams(msg->kp[i], msg->kd[i]);
 			}
 			else RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg->drive_ids[i]);
 		}
@@ -295,7 +304,7 @@ void Md80Node::impedanceCommandCallback(const std::shared_ptr<candle_ros2::msg::
 			if(candle!= NULL)
 			{
 				auto&md = candle->md80s.at(msg->drive_ids[i]);
-				md.setImpedanceControllerParams(msg->kp[i], msg->kd[i]);
+				md.setImpedanceRequestedControllerParams(msg->kp[i], msg->kd[i]);
 				md.setMaxTorque(msg->max_output[i]);
 			}
 			else RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg->drive_ids[i]);

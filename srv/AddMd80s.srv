@@ -1,4 +1,10 @@
 uint16[] drive_ids
+float32[] watchdog_kp
+float32[] torque_offset
+float32[] soft_limit
+float32[] max_position
+float32[] min_position
+float32[] pos_percent_wanted
 ---
 bool[] drives_success
 uint16 total_number_of_drives

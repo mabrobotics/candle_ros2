@@ -6,15 +6,15 @@ Md80Node::Md80Node(int argc, char **argv) : Node("candle_ros2_node")
 {
 	if (strcmp(argv[1], "--help") == 0)
 	{
-		std::cout << "usage: ./latency_test <bus> <mode> <baud>[--help]" << std::endl;
+		std::cout << "usage: candle_ros candle_ros_node <bus> <baud>[--help]" << std::endl;
 		std::cout << "<bus> can be SPI/USB/UART" << std::endl;
-		std::cout << "<mode> can be NORMAL/FAST1/FAST2" << std::endl;
 		std::cout << "<baud> can be 1M/2M/5M/8M" << std::endl;
 		std::cout << "[--help] - displays help message" << std::endl;
 		return;
 	}
+	std::cout<< argc <<std::endl;
 
-	if (argc < 3)
+	if (argc < 3 || argc > 3)
 	{
 		std::cout << "Wrong arguments specified, please see candle_ros candle_ros_node --help" << std::endl;
 		return;
@@ -36,25 +36,13 @@ Md80Node::Md80Node(int argc, char **argv) : Node("candle_ros2_node")
 		return;
 	}
 
-	if (strcmp(argv[2], "NORMAL") == 0)
-		mode = mab::CANdleFastMode_E::NORMAL;
-	else if (strcmp(argv[2], "FAST1") == 0)
-		mode = mab::CANdleFastMode_E::FAST1;
-	else if (strcmp(argv[2], "FAST2") == 0)
-		mode = mab::CANdleFastMode_E::FAST2;
-	else
-	{
-		std::cout << "mode parameter not recognised!" << std::endl;
-		return;
-	}
-
 	if (strcmp(argv[2], "1M") == 0)
 		baud = mab::CAN_BAUD_1M;
-	else if (strcmp(argv[3], "2M") == 0)
+	else if (strcmp(argv[2], "2M") == 0)
 		baud = mab::CAN_BAUD_2M;
-	else if (strcmp(argv[3], "5M") == 0)
+	else if (strcmp(argv[2], "5M") == 0)
 		baud = mab::CAN_BAUD_5M;
-	else if (strcmp(argv[3], "8M") == 0)
+	else if (strcmp(argv[2], "8M") == 0)
 		baud = mab::CAN_BAUD_8M;
 	else
 	{

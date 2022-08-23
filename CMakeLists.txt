@@ -36,9 +36,13 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 set(CMAKE_INSTALL_RPATH $ORIGIN)  # sets proper runtime paths for exec to link .so properly
 
+set(CANDLE_BUILD_STATIC ON)
+set(CANDLE_OMIT_EXAMPLES ON)
+add_subdirectory(candle_gitlab)
+
 add_executable(${PROJECT_NAME}_node src/md80_node.cpp)
-target_link_libraries(${PROJECT_NAME}_node "${CMAKE_SOURCE_DIR}/lib/libcandle.so")
-target_include_directories(${PROJECT_NAME}_node PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(${PROJECT_NAME}_node candle)
+target_include_directories(${PROJECT_NAME}_node PUBLIC ./candle_gitlab/Candle/include ${CMAKE_SOURCE_DIR}/include)
 
 rosidl_target_interfaces(${PROJECT_NAME}_node ${PROJECT_NAME} "rosidl_typesupport_cpp")  # Links msgs from this very package
 ament_target_dependencies(${PROJECT_NAME}_node rclcpp sensor_msgs)
@@ -47,7 +51,5 @@ install(TARGETS ${PROJECT_NAME}_node
   DESTINATION lib/${PROJECT_NAME}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
   )
-install(FILES lib/libcandle.so 
-  DESTINATION lib/${PROJECT_NAME}/
-  )
+  
 ament_package()

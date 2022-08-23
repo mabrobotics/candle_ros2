@@ -1,0 +1,3 @@
+[submodule "candle_gitlab"]
+	path = candle_gitlab
+	url = git@gitlab.com:MAB_Robotics/md80_usbcan.git

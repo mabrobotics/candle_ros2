@@ -2,13 +2,71 @@
 
 const std::string version = "v1.1";
 
-Md80Node::Md80Node() : Node("candle_ros2_node")
+Md80Node::Md80Node(int argc, char **argv) : Node("candle_ros2_node")
 {
-	while(1)
+	if (strcmp(argv[1], "--help") == 0)
+	{
+		std::cout << "usage: ./latency_test <bus> <mode> <baud>[--help]" << std::endl;
+		std::cout << "<bus> can be SPI/USB/UART" << std::endl;
+		std::cout << "<mode> can be NORMAL/FAST1/FAST2" << std::endl;
+		std::cout << "<baud> can be 1M/2M/5M/8M" << std::endl;
+		std::cout << "[--help] - displays help message" << std::endl;
+		return;
+	}
+
+	if (argc < 3)
+	{
+		std::cout << "Wrong arguments specified, please see candle_ros candle_ros_node --help" << std::endl;
+		return;
+	}
+
+	mab::BusType_E bus = mab::BusType_E::USB;
+	mab::CANdleFastMode_E mode = mab::CANdleFastMode_E::NORMAL;
+	mab::CANdleBaudrate_E baud = mab::CAN_BAUD_1M;
+
+	if (strcmp(argv[1], "SPI") == 0)
+		bus = mab::BusType_E::SPI;
+	else if (strcmp(argv[1], "USB") == 0)
+		bus = mab::BusType_E::USB;
+	else if (strcmp(argv[1], "UART") == 0)
+		bus = mab::BusType_E::UART;
+	else
+	{
+		std::cout << "bus parameter not recognised!" << std::endl;
+		return;
+	}
+
+	if (strcmp(argv[2], "NORMAL") == 0)
+		mode = mab::CANdleFastMode_E::NORMAL;
+	else if (strcmp(argv[2], "FAST1") == 0)
+		mode = mab::CANdleFastMode_E::FAST1;
+	else if (strcmp(argv[2], "FAST2") == 0)
+		mode = mab::CANdleFastMode_E::FAST2;
+	else
+	{
+		std::cout << "mode parameter not recognised!" << std::endl;
+		return;
+	}
+
+	if (strcmp(argv[2], "1M") == 0)
+		baud = mab::CAN_BAUD_1M;
+	else if (strcmp(argv[3], "2M") == 0)
+		baud = mab::CAN_BAUD_2M;
+	else if (strcmp(argv[3], "5M") == 0)
+		baud = mab::CAN_BAUD_5M;
+	else if (strcmp(argv[3], "8M") == 0)
+		baud = mab::CAN_BAUD_8M;
+	else
+	{
+		std::cout << "baud parameter not recognised!" << std::endl;
+		return;
+	}
+
+	while(bus == mab::BusType_E::USB)
 	{
 		try
 		{
-			auto candle = new mab::Candle(mab::CAN_BAUD_1M, true, mab::CANdleFastMode_E::NORMAL, false);
+			auto candle = new mab::Candle(baud, true, mode, false, bus);
 			std::cout<<"[CANDLE] Found CANdle with ID: "<<candle->getUsbDeviceId()<<std::endl;
 			candleInstances.push_back(candle);
 		}
@@ -16,6 +74,12 @@ Md80Node::Md80Node() : Node("candle_ros2_node")
 		{
 			break;
 		}
+	}
+
+	if(bus != mab::BusType_E::USB)
+	{
+		auto candle = new mab::Candle(baud, true, mode, false, bus);
+		candleInstances.push_back(candle);
 	}
 
 	addMd80Service = this->create_service<candle_ros2::srv::AddMd80s>(this->get_name() + std::string("/add_md80s"),
@@ -349,7 +413,7 @@ void Md80Node::positionCommandCallback(const std::shared_ptr<candle_ros2::msg::P
 int main(int argc, char **argv)
 {	
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<Md80Node>();
+    auto node = std::make_shared<Md80Node>(argc,argv);
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

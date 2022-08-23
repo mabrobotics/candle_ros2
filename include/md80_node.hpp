@@ -1,4 +1,4 @@
-#include "Candle/candle.hpp"
+#include "candle.hpp"
 
 #include "candle_ros2/msg/impedance_command.hpp"
 #include "candle_ros2/msg/motion_command.hpp"
@@ -16,7 +16,7 @@
 class Md80Node : public rclcpp::Node
 {
 public:
-    Md80Node();
+    Md80Node(int argc, char **argv);
     ~Md80Node();
 
 private:

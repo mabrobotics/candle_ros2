@@ -188,8 +188,8 @@ void Md80Node::service_setModeMd80(const std::shared_ptr<candle_ros2::srv::SetMo
 			mode = mab::Md80Mode_E::POSITION_PID;
 		else if (request->mode[i] == "VELOCITY_PID")
 			mode = mab::Md80Mode_E::VELOCITY_PID;
-		else if (request->mode[i] == "TORQUE")
-			mode = mab::Md80Mode_E::TORQUE;
+		else if (request->mode[i] == "DEPRECATED")
+			mode = mab::Md80Mode_E::DEPRECATED;
 		else
 		{
 			RCLCPP_WARN(this->get_logger(), "MODE %s not recognized, setting IDLE for driveID = %d", request->mode[i].c_str(), request->drive_ids[i]);

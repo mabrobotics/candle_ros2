@@ -1,21 +1,22 @@
 #include "md80_node.hpp"
 
-const std::string version = "v1.1";
+const std::string version = "v1.2";
 
 Md80Node::Md80Node(int argc, char** argv) : Node("candle_ros2_node")
 {
-	if (strcmp(argv[1], "--help") == 0)
+	if (argc < 3 || argc > 4)
 	{
-		std::cout << "usage: candle_ros candle_ros_node <bus> <baud>[--help]" << std::endl;
-		std::cout << "<bus> can be SPI/USB/UART" << std::endl;
-		std::cout << "<baud> can be 1M/2M/5M/8M" << std::endl;
-		std::cout << "[--help] - displays help message" << std::endl;
+		std::cout << "Wrong arguments specified, please see candle_ros candle_ros_node --help" << std::endl;
 		return;
 	}
 
-	if (argc < 3 || argc > 3)
+	if (strcmp(argv[1], "--help") == 0)
 	{
-		std::cout << "Wrong arguments specified, please see candle_ros candle_ros_node --help" << std::endl;
+		std::cout << "usage: candle_ros candle_ros_node <bus> <baud> [<device>] [--help]" << std::endl;
+		std::cout << "<bus> can be SPI/USB/UART" << std::endl;
+		std::cout << "<baud> can be 1M/2M/5M/8M" << std::endl;
+		std::cout << "<device> SPI or UART device if default is not suitable" << std::endl;
+		std::cout << "[--help] - displays help message" << std::endl;
 		return;
 	}
 
@@ -64,7 +65,13 @@ Md80Node::Md80Node(int argc, char** argv) : Node("candle_ros2_node")
 
 	if (bus != mab::BusType_E::USB)
 	{
-		auto candle = new mab::Candle(baud, true, bus);
+		mab::Candle* candle = nullptr;
+
+		if (argc == 4 && argv[3] != 0)
+			candle = new mab::Candle(baud, true, bus, argv[3]);
+		else
+			candle = new mab::Candle(baud, true, bus);
+
 		candleInstances.push_back(candle);
 	}
 

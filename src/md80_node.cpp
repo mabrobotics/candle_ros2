@@ -1,10 +1,10 @@
 #include "md80_node.hpp"
 
-const std::string version = "v1.2";
+const std::string version = "v1.3.0";
 
 Md80Node::Md80Node(int argc, char** argv) : Node("candle_ros2_node")
 {
-	if (argc < 3 || argc > 4)
+	if (argc < 2 || argc > 4)
 	{
 		std::cout << "Wrong arguments specified, please see candle_ros candle_ros_node --help" << std::endl;
 		return;

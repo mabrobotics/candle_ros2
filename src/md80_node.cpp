@@ -1,6 +1,6 @@
 #include "md80_node.hpp"
 
-const std::string version = "v1.3.0";
+const std::string version = "v1.3.2";
 
 Md80Node::Md80Node(int argc, char** argv) : Node("candle_ros2_node")
 {
@@ -191,8 +191,8 @@ void Md80Node::service_setModeMd80(const std::shared_ptr<candle_ros2::srv::SetMo
 			mode = mab::Md80Mode_E::POSITION_PID;
 		else if (request->mode[i] == "VELOCITY_PID")
 			mode = mab::Md80Mode_E::VELOCITY_PID;
-		else if (request->mode[i] == "DEPRECATED")
-			mode = mab::Md80Mode_E::DEPRECATED;
+		else if (request->mode[i] == "RAW_TORQUE")
+			mode = mab::Md80Mode_E::RAW_TORQUE;
 		else
 		{
 			RCLCPP_WARN(this->get_logger(), "MODE %s not recognized, setting IDLE for driveID = %d", request->mode[i].c_str(), request->drive_ids[i]);
@@ -309,7 +309,7 @@ void Md80Node::motionCommandCallback(const std::shared_ptr<candle_ros2::msg::Mot
 				auto& md = candle->getMd80FromList(msg->drive_ids[i]);
 				md.setTargetPosition(msg->target_position[i]);
 				md.setTargetVelocity(msg->target_velocity[i]);
-				md.setTorque(msg->target_torque[i]);
+				md.setTargetTorque(msg->target_torque[i]);
 			}
 			else
 				RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg->drive_ids[i]);
@@ -390,7 +390,7 @@ void Md80Node::positionCommandCallback(const std::shared_ptr<candle_ros2::msg::P
 			{
 				auto& md = candle->getMd80FromList(msg->drive_ids[i]);
 				md.setPositionControllerParams(msg->position_pid[i].kp, msg->position_pid[i].ki, msg->position_pid[i].kd, msg->position_pid[i].i_windup);
-				md.setMaxVelocity(msg->position_pid[i].max_output);
+				md.setProfileVelocity(msg->position_pid[i].max_output);
 				if (i < (int)msg->velocity_pid.size())
 				{
 					md.setVelocityControllerParams(msg->velocity_pid[i].kp, msg->velocity_pid[i].ki, msg->velocity_pid[i].kd, msg->velocity_pid[i].i_windup);

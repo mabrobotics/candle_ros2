@@ -1,6 +1,3 @@
-[submodule "candle"]
-	path = candle
-	url = https://github.com/mabrobotics/candle.git
 [submodule "CANdle-SDK"]
 	path = CANdle-SDK
 	url = git@github.com:mabrobotics/CANdle-SDK.git

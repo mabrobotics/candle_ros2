@@ -343,8 +343,8 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros::srv::SetMode::Request> 
 
     for (size_t i = 0; i < req->drive_ids.size(); i++)
     {
-        mab::MdMode_E mode = mab::MdMode_E::IDLE;
-        const auto&   m    = req->mode[i];
+        mab::MdMode_E      mode = mab::MdMode_E::IDLE;
+        const std::string& m    = req->mode[i];
 
         if (m == "IMPEDANCE")
             mode = mab::MdMode_E::IMPEDANCE;
@@ -355,12 +355,13 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros::srv::SetMode::Request> 
         else if (m == "RAW_TORQUE")
             mode = mab::MdMode_E::RAW_TORQUE;
         else
+        {
             mode = mab::MdMode_E::IDLE;
-        RCLCPP_WARN(this->get_logger(),
-                    "MODE %s not recognized, setting IDLE for drive with ID: %d",
-                    req->mode[i].c_str(),
-                    req->drive_ids[i]);
-        mode = mab::MdMode_E::IDLE;
+            RCLCPP_WARN(this->get_logger(),
+                        "MODE %s not recognized, setting IDLE for drive with ID: %d",
+                        m,
+                        req->drive_ids[i]);
+        }
 
         auto it =
             std::find_if(mds.begin(),

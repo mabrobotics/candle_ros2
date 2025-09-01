@@ -291,6 +291,8 @@ void MdNode::cbImpedanceCmd(const candle_ros::msg::ImpedanceCmd& msg)
 void MdNode::cbAddMd(const std::shared_ptr<candle_ros::srv::AddMds::Request> req,
                      std::shared_ptr<candle_ros::srv::AddMds::Response>      rsp)
 {
+    rsp->drives_success.reserve(req->drive_ids.size());
+
     for (auto id : req->drive_ids)
     {
         mab::MD md(id, candle.get());
@@ -309,6 +311,8 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros::srv::AddMds::Request> req
 void MdNode::cbZero(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
                     std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
 {
+    rsp->drives_success.reserve(req->drive_ids.size());
+
     for (auto id : req->drive_ids)
     {
         auto md = std::find_if(
@@ -384,6 +388,8 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros::srv::SetMode::Request> 
 void MdNode::cbEnable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
                       std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
 {
+    rsp->drives_success.reserve(req->drive_ids.size());
+
     for (auto id : req->drive_ids)
     {
         auto md = std::find_if(
@@ -405,6 +411,8 @@ void MdNode::cbEnable(const std::shared_ptr<candle_ros::srv::Generic::Request> r
 void MdNode::cbDisable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
                        std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
 {
+    rsp->drives_success.reserve(req->drive_ids.size());
+
     for (auto id : req->drive_ids)
     {
         auto md = std::find_if(

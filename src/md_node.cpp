@@ -311,12 +311,12 @@ void MdNode::cbZero(const std::shared_ptr<candle_ros::srv::Generic::Request> req
 {
     for (auto id : req->drive_ids)
     {
-        auto it = std::find_if(
-            mds.begin(), mds.end(), [id](const mab::MD& md) { return md.m_canId == id; });
+        auto md = std::find_if(
+            mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
 
-        if (it != mds.end())
+        if (md != mds.end())
         {
-            if (it->zero() == mab::MD::Error_t::OK)
+            if (md->zero() == mab::MD::Error_t::OK)
                 rsp->drives_success.push_back(true);
             else
                 rsp->drives_success.push_back(false);
@@ -386,12 +386,12 @@ void MdNode::cbEnable(const std::shared_ptr<candle_ros::srv::Generic::Request> r
 {
     for (auto id : req->drive_ids)
     {
-        auto it = std::find_if(
-            mds.begin(), mds.end(), [id](const mab::MD& md) { return md.m_canId == id; });
+        auto md = std::find_if(
+            mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
 
-        if (it != mds.end())
+        if (md != mds.end())
         {
-            if (it->enable() == mab::MD::Error_t::OK)
+            if (md->enable() == mab::MD::Error_t::OK)
                 rsp->drives_success.push_back(true);
             else
                 rsp->drives_success.push_back(false);
@@ -407,12 +407,12 @@ void MdNode::cbDisable(const std::shared_ptr<candle_ros::srv::Generic::Request> 
 {
     for (auto id : req->drive_ids)
     {
-        auto it = std::find_if(
-            mds.begin(), mds.end(), [id](const mab::MD& md) { return md.m_canId == id; });
+        auto md = std::find_if(
+            mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
 
-        if (it != mds.end())
+        if (md != mds.end())
         {
-            if (it->disable() == mab::MD::Error_t::OK)
+            if (md->disable() == mab::MD::Error_t::OK)
                 rsp->drives_success.push_back(true);
             else
                 rsp->drives_success.push_back(false);

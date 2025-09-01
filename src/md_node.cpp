@@ -102,11 +102,75 @@ void MdNode::publishJointStates()
 
 void MdNode::cbMotionCmd(const candle_ros::msg::MotionCmd& msg)
 {
+    size_t n = msg.drive_ids.size();
+
+    if (n != msg.target_position.size() || n != msg.target_velocity.size() ||
+        n != msg.target_torque.size())
+    {
+        RCLCPP_WARN(
+            this->get_logger(),
+            "Motion Command message incomplete. Sizes of arrays do not match! Ignoring message.");
+        return;
+    }
+
+    for (size_t i = 0; i < n; i++)
+    {
+        auto it =
+            std::find_if(mds.begin(),
+                         mds.end(),
+                         [id = msg.drive_ids[i]](const mab::MD& md) { return md.m_canId == id; });
+
+        if (it != mds.end())
+        {
+            it->setTargetPosition(msg.target_position[i]);
+            it->setTargetVelocity(msg.target_velocity[i]);
+            it->setTargetTorque(msg.target_torque[i]);
+        }
+        else
+            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.drive_ids[i]);
+    }
     return;
 }
 
 void MdNode::cbPositionCmd(const candle_ros::msg::PositionPidCmd& msg)
 {
+    size_t n = msg.drive_ids.size();
+
+    if (n != msg.position_pid.size())
+    {
+        RCLCPP_WARN(
+            this->get_logger(),
+            "Position Command message incomplete. Sizes of arrays do not match! Ignoring message.");
+        return;
+    }
+
+    for (size_t i = 0; i < n; i++)
+    {
+        auto it =
+            std::find_if(mds.begin(),
+                         mds.end(),
+                         [id = msg.drive_ids[i]](const mab::MD& md) { return md.m_canId == id; });
+
+        if (it != mds.end())
+        {
+            it->setPositionPIDparam(msg.position_pid[i].kp,
+                                    msg.position_pid[i].ki,
+                                    msg.position_pid[i].kd,
+                                    msg.position_pid[i].i_windup);
+            it->setProfileVelocity(msg.position_pid[i].max_output);
+
+            if (i < (size_t)msg.velocity_pid.size())
+            {
+                it->setVelocityPIDparam(msg.velocity_pid[i].kp,
+                                        msg.velocity_pid[i].ki,
+                                        msg.velocity_pid[i].kd,
+                                        msg.velocity_pid[i].i_windup);
+                it->setMaxTorque(msg.velocity_pid[i].max_output);
+            }
+        }
+        else
+            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.drive_ids[i]);
+    }
     return;
 }
 

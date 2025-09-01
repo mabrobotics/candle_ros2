@@ -176,6 +176,34 @@ void MdNode::cbPositionCmd(const candle_ros::msg::PositionPidCmd& msg)
 
 void MdNode::cbVelocityCmd(const candle_ros::msg::VelocityPidCmd& msg)
 {
+    size_t n = msg.drive_ids.size();
+
+    if (n != msg.velocity_pid.size())
+    {
+        RCLCPP_WARN(
+            this->get_logger(),
+            "Velocity Command message incomplete. Sizes of arrays do not match! Ignoring message.");
+        return;
+    }
+
+    for (size_t i = 0; i < n; i++)
+    {
+        auto it =
+            std::find_if(mds.begin(),
+                         mds.end(),
+                         [id = msg.drive_ids[i]](const mab::MD& md) { return md.m_canId == id; });
+
+        if (it != mds.end())
+        {
+            it->setVelocityPIDparam(msg.velocity_pid[i].kp,
+                                    msg.velocity_pid[i].ki,
+                                    msg.velocity_pid[i].kd,
+                                    msg.velocity_pid[i].i_windup);
+            it->setMaxTorque(msg.velocity_pid[i].max_output);
+        }
+        else
+            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.drive_ids[i]);
+    }
     return;
 }
 

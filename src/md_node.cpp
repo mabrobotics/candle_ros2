@@ -21,7 +21,8 @@ MdNode::MdNode() : Node("candle_ros_node")
         baud = mab::CANdleBaudrate_E::CAN_BAUD_8M;
     else
     {
-        RCLCPP_INFO(this->get_logger(), "<baud> parameter not recognised!");
+        RCLCPP_INFO(
+            this->get_logger(), "<baud> parameter not recognised! Value: '%s'", paramBaud.c_str());
         return;
     }
 
@@ -31,7 +32,8 @@ MdNode::MdNode() : Node("candle_ros_node")
         bus = mab::candleTypes::busTypes_t::USB;
     else
     {
-        RCLCPP_INFO(this->get_logger(), "<bus> parameter not recognised!");
+        RCLCPP_INFO(
+            this->get_logger(), "<bus> parameter not recognised! Value: %s", paramBus.c_str());
         return;
     }
 

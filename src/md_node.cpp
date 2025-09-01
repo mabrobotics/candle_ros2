@@ -1,6 +1,6 @@
 #include "md_node.hpp"
 
-MdNode::MdNode() : Node("candle_ros_node")
+MdNode::MdNode() : Node("candle_md_node")
 {
     this->declare_parameter<std::string>("baud", "1M");
     this->declare_parameter<std::string>("bus", "USB");
@@ -78,12 +78,12 @@ MdNode::MdNode() : Node("candle_ros_node")
     tmrPub = this->create_wall_timer(std::chrono::milliseconds(100),
                                      std::bind(&MdNode::publishJointStates, this));
 
-    RCLCPP_INFO(this->get_logger(), "Candle ROS2 node has started.");
+    RCLCPP_INFO(this->get_logger(), "Candle ROS2 MD node has started.");
 }
 
 MdNode::~MdNode()
 {
-    RCLCPP_INFO(this->get_logger(), "Candle ROS2 node finished.");
+    RCLCPP_INFO(this->get_logger(), "Candle ROS2 MD node finished.");
 }
 
 void MdNode::publishJointStates()

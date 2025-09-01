@@ -124,9 +124,18 @@ void MdNode::cbMotionCmd(const candle_ros::msg::MotionCmd& msg)
 
         if (it != mds.end())
         {
-            it->setTargetPosition(msg.target_position[i]);
-            it->setTargetVelocity(msg.target_velocity[i]);
-            it->setTargetTorque(msg.target_torque[i]);
+            if (it->setTargetPosition(msg.target_position[i]) != mab::MD::Error_t::OK)
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Target Position for drive with ID: %d",
+                            msg.drive_ids[i]);
+            if (it->setTargetVelocity(msg.target_velocity[i]) != mab::MD::Error_t::OK)
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Target Velocity for drive with ID: %d",
+                            msg.drive_ids[i]);
+            if (it->setTargetTorque(msg.target_torque[i]) != mab::MD::Error_t::OK)
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Target Torque for drive with ID: %d",
+                            msg.drive_ids[i]);
         }
         else
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.drive_ids[i]);
@@ -155,19 +164,39 @@ void MdNode::cbPositionCmd(const candle_ros::msg::PositionPidCmd& msg)
 
         if (it != mds.end())
         {
-            it->setPositionPIDparam(msg.position_pid[i].kp,
-                                    msg.position_pid[i].ki,
-                                    msg.position_pid[i].kd,
-                                    msg.position_pid[i].i_windup);
-            it->setProfileVelocity(msg.position_pid[i].max_output);
+            if (it->setPositionPIDparam(msg.position_pid[i].kp,
+                                        msg.position_pid[i].ki,
+                                        msg.position_pid[i].kd,
+                                        msg.position_pid[i].i_windup) != mab::MD::Error_t::OK)
+            {
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Position PID parameters for drive with ID: %d",
+                            msg.drive_ids[i]);
+            }
+            if (it->setProfileVelocity(msg.position_pid[i].max_output) != mab::MD::Error_t::OK)
+            {
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Profile Velocity for drive with ID: %d",
+                            msg.drive_ids[i]);
+            }
 
             if (i < (size_t)msg.velocity_pid.size())
             {
-                it->setVelocityPIDparam(msg.velocity_pid[i].kp,
-                                        msg.velocity_pid[i].ki,
-                                        msg.velocity_pid[i].kd,
-                                        msg.velocity_pid[i].i_windup);
-                it->setMaxTorque(msg.velocity_pid[i].max_output);
+                if (it->setVelocityPIDparam(msg.velocity_pid[i].kp,
+                                            msg.velocity_pid[i].ki,
+                                            msg.velocity_pid[i].kd,
+                                            msg.velocity_pid[i].i_windup) != mab::MD::Error_t::OK)
+                {
+                    RCLCPP_WARN(this->get_logger(),
+                                "Failed to set Velocity PID parameters for drive with ID: %d",
+                                msg.drive_ids[i]);
+                }
+                if (it->setMaxTorque(msg.velocity_pid[i].max_output) != mab::MD::Error_t::OK)
+                {
+                    RCLCPP_WARN(this->get_logger(),
+                                "Failed to set Max Torque for drive with ID: %d",
+                                msg.drive_ids[i]);
+                }
             }
         }
         else
@@ -197,11 +226,21 @@ void MdNode::cbVelocityCmd(const candle_ros::msg::VelocityPidCmd& msg)
 
         if (it != mds.end())
         {
-            it->setVelocityPIDparam(msg.velocity_pid[i].kp,
-                                    msg.velocity_pid[i].ki,
-                                    msg.velocity_pid[i].kd,
-                                    msg.velocity_pid[i].i_windup);
-            it->setMaxTorque(msg.velocity_pid[i].max_output);
+            if (it->setVelocityPIDparam(msg.velocity_pid[i].kp,
+                                        msg.velocity_pid[i].ki,
+                                        msg.velocity_pid[i].kd,
+                                        msg.velocity_pid[i].i_windup) != mab::MD::Error_t::OK)
+            {
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Velocity PID parameters for drive with ID: %d",
+                            msg.drive_ids[i]);
+            }
+            if (it->setMaxTorque(msg.velocity_pid[i].max_output) != mab::MD::Error_t::OK)
+            {
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Max Torque for drive with ID: %d",
+                            msg.drive_ids[i]);
+            }
         }
         else
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.drive_ids[i]);
@@ -211,6 +250,41 @@ void MdNode::cbVelocityCmd(const candle_ros::msg::VelocityPidCmd& msg)
 
 void MdNode::cbImpedanceCmd(const candle_ros::msg::ImpedanceCmd& msg)
 {
+    size_t n = msg.drive_ids.size();
+
+    if (n != msg.kp.size() || n != msg.kd.size() || n != msg.max_output.size())
+    {
+        RCLCPP_WARN(this->get_logger(),
+                    "Impedance Command message incomplete. Sizes of arrays do not match! Ignoring "
+                    "message.");
+        return;
+    }
+
+    for (size_t i = 0; i < n; i++)
+    {
+        auto it =
+            std::find_if(mds.begin(),
+                         mds.end(),
+                         [id = msg.drive_ids[i]](const mab::MD& md) { return md.m_canId == id; });
+
+        if (it != mds.end())
+        {
+            if (it->setImpedanceParams(msg.kp[i], msg.kd[i]) != mab::MD::Error_t::OK)
+            {
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Impedance parameters for drive with ID: %d",
+                            msg.drive_ids[i]);
+            }
+            if (it->setMaxTorque(msg.max_output[i]) != mab::MD::Error_t::OK)
+            {
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Max Torque for drive with ID: %d",
+                            msg.drive_ids[i]);
+            }
+        }
+        else
+            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.drive_ids[i]);
+    }
     return;
 }
 

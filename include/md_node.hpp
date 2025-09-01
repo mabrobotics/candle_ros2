@@ -2,17 +2,17 @@
 #include "rclcpp/rclcpp.hpp"
 
 /* Messages */
-#include "candle_ros/msg/ImpedanceCmd.h"
-#include "candle_ros/msg/MotionCmd.h"
-#include "candle_ros/msg/PositionPidCmd.h"
-#include "candle_ros/msg/VelocityPidCmd.h"
+#include "candle_ros/msg/impedance_cmd.hpp"
+#include "candle_ros/msg/motion_cmd.hpp"
+#include "candle_ros/msg/position_pid_cmd.hpp"
+#include "candle_ros/msg/velocity_pid_cmd.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 
 /* Services */
-#include "candle_ros/srv/AddMds.h"
-#include "candle_ros/srv/Generic.h"
-#include "candle_ros/srv/SetLimits.h"
-#include "candle_ros/srv/SetMode.h"
-#include "sensor_msgs/JointState.h"
+#include "candle_ros/srv/add_mds.hpp"
+#include "candle_ros/srv/generic.hpp"
+#include "candle_ros/srv/set_limits.hpp"
+#include "candle_ros/srv/set_mode.hpp"
 
 /* CANdle-SDK */
 #include "candle.hpp"
@@ -25,6 +25,9 @@ class MdNode : public rclcpp::Node
     ~MdNode();
 
   private:
+    std::unique_ptr<mab::Candle> candle;
+    std::vector<mab::MD>         mds;
+
     std::string topicPrefix = "md/";
 
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pubJointState;
@@ -39,8 +42,6 @@ class MdNode : public rclcpp::Node
     rclcpp::Service<candle_ros::srv::SetMode>::SharedPtr srvSetMode;
     rclcpp::Service<candle_ros::srv::Generic>::SharedPtr srvEnable;
     rclcpp::Service<candle_ros::srv::Generic>::SharedPtr srvDisable;
-
-    std::vector<mab::Candle*> candleInstances;
 
     void publishJointStates();
 
@@ -59,6 +60,4 @@ class MdNode : public rclcpp::Node
                   std::shared_ptr<candle_ros::srv::Generic::Response>      rsp);
     void cbDisable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
                    std::shared_ptr<candle_ros::srv::Generic::Response>      rsp);
-
-    // mab::Candle* findCandleByMd80Id(uint16_t md80Id);
 };

@@ -2,7 +2,7 @@
 
 MdNode::MdNode() : Node("candle_ros_node")
 {
-    this->declare_parameter<int>("baud", "1M");
+    this->declare_parameter<std::string>("baud", "1M");
     this->declare_parameter<std::string>("bus", "USB");
 
     auto baud = mab::CANdleBaudrate_E::CAN_BAUD_1M;
@@ -11,13 +11,13 @@ MdNode::MdNode() : Node("candle_ros_node")
     std::string paramBaud = this->get_parameter("baud").as_string();
     std::string paramBus  = this->get_parameter("bus").as_string();
 
-    if (strcmp(paramBaud, "1M") == 0)
+    if (paramBaud == "1M")
         baud = mab::CANdleBaudrate_E::CAN_BAUD_1M;
-    else if (strcmp(paramBaud, "2M") == 0)
+    else if (paramBaud == "2M")
         baud = mab::CANdleBaudrate_E::CAN_BAUD_2M;
-    else if (strcmp(paramBaud, "5M") == 0)
+    else if (paramBaud == "5M")
         baud = mab::CANdleBaudrate_E::CAN_BAUD_5M;
-    else if (strcmp(paramBaud, "8M") == 0)
+    else if (paramBaud == "8M")
         baud = mab::CANdleBaudrate_E::CAN_BAUD_8M;
     else
     {
@@ -25,9 +25,9 @@ MdNode::MdNode() : Node("candle_ros_node")
         return;
     }
 
-    if (strcmp(paramBus, "SPI") == 0)
-        bus = mmab::candleTypes::busTypes_t::SPI;
-    else if (strcmp(paramBus, "USB") == 0)
+    if (paramBus == "SPI")
+        bus = mab::candleTypes::busTypes_t::SPI;
+    else if (paramBus == "USB")
         bus = mab::candleTypes::busTypes_t::USB;
     else
     {
@@ -38,7 +38,7 @@ MdNode::MdNode() : Node("candle_ros_node")
     candle = std::unique_ptr<mab::Candle>(mab::attachCandle(baud, bus));
 
     pubJointState =
-        this->create_publisher<sensor_msgs::msg::JointState>(topicPrefix + "joint_states", qosRT);
+        this->create_publisher<sensor_msgs::msg::JointState>(topicPrefix + "joint_states", 10);
 
     subMotionCmd = this->create_subscription<candle_ros::msg::MotionCmd>(
         topicPrefix + "motion_command",
@@ -73,103 +73,194 @@ MdNode::MdNode() : Node("candle_ros_node")
         topicPrefix + "disable",
         std::bind(&MdNode::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 
-    pubTimer = n.createTimer(ros::Duration(0.1), std::bind(&Md80Node::publishJointStates, this));
-    pubTimer.stop();
+    // pubTimer = n.createTimer(ros::Duration(0.1), std::bind(&Md80Node::publishJointStates, this));
+    // pubTimer.stop();
 
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 node has started.");
 }
 
-Md80Node::~MdNode()
+MdNode::~MdNode()
 {
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 node finished.");
 }
 
-void Md80Node::publishJointStates()
+void MdNode::publishJointStates()
 {
-    sensor_msgs::JointState jointStateMsg;
-    jointStateMsg.header.stamp = ros::Time::now();
-    for (auto candle : candleInstances)
+    // sensor_msgs::JointState jointStateMsg;
+    // jointStateMsg.header.stamp = ros::Time::now();
+    // for (auto candle : candleInstances)
+    // {
+    //     for (auto& md : candle->md80s)
+    //     {
+    //         jointStateMsg.name.push_back(std::string("Joint " + std::to_string(md.getId())));
+    //         jointStateMsg.position.push_back(md.getPosition());
+    //         jointStateMsg.velocity.push_back(md.getVelocity());
+    //         jointStateMsg.effort.push_back(md.getTorque());
+    //     }
+    // }
+
+    // this->jointStatePub.publish(jointStateMsg);
+    return;
+}
+
+void MdNode::cbMotionCmd(const candle_ros::msg::MotionCmd& msg)
+{
+    return;
+}
+
+void MdNode::cbPositionCmd(const candle_ros::msg::PositionPidCmd& msg)
+{
+    return;
+}
+
+void MdNode::cbVelocityCmd(const candle_ros::msg::VelocityPidCmd& msg)
+{
+    return;
+}
+
+void MdNode::cbImpedanceCmd(const candle_ros::msg::ImpedanceCmd& msg)
+{
+    return;
+}
+
+void MdNode::cbAddMd(const std::shared_ptr<candle_ros::srv::AddMds::Request> req,
+                     std::shared_ptr<candle_ros::srv::AddMds::Response>      rsp)
+{
+    for (auto id : req->drive_ids)
     {
-        for (auto& md : candle->md80s)
+        mab::MD md(id, candle.get());
+        if (md.init() == mab::MD::Error_t::OK)
         {
-            jointStateMsg.name.push_back(std::string("Joint " + std::to_string(md.getId())));
-            jointStateMsg.position.push_back(md.getPosition());
-            jointStateMsg.velocity.push_back(md.getVelocity());
-            jointStateMsg.effort.push_back(md.getTorque());
+            mds.push_back(std::move(md));
+            rsp->drives_success.push_back(true);
         }
+        else
+            rsp->drives_success.push_back(false);
+    }
+    rsp->total_number_of_drives = static_cast<u16>(mds.size());
+    return;
+}
+
+void MdNode::cbZero(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
+                    std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
+{
+    for (auto id : req->drive_ids)
+    {
+        auto it = std::find_if(
+            mds.begin(), mds.end(), [id](const mab::MD& md) { return md.m_canId == id; });
+
+        if (it != mds.end())
+        {
+            if (it->zero() == mab::MD::Error_t::OK)
+                rsp->drives_success.push_back(true);
+            else
+                rsp->drives_success.push_back(false);
+        }
+        else
+            rsp->drives_success.push_back(false);
+    }
+    return;
+}
+
+void MdNode::cbSetMode(const std::shared_ptr<candle_ros::srv::SetMode::Request> req,
+                       std::shared_ptr<candle_ros::srv::SetMode::Response>      rsp)
+{
+    if (req->drive_ids.size() != req->mode.size())
+    {
+        rsp->drives_success.assign(req->drive_ids.size(), false);
+
+        RCLCPP_WARN(this->get_logger(),
+                    "SetMode request incomplete. Sizes of arrays do not match!");
+        return;
     }
 
-    this->jointStatePub.publish(jointStateMsg);
-}
+    rsp->drives_success.reserve(req->drive_ids.size());
 
-void cbMotionCmd(const candle_ros::msg::MotionCmd& msg)
-{
+    for (size_t i = 0; i < req->drive_ids.size(); i++)
+    {
+        mab::MdMode_E mode = mab::MdMode_E::IDLE;
+        const auto&   m    = req->mode[i];
+
+        if (m == "IMPEDANCE")
+            mode = mab::MdMode_E::IMPEDANCE;
+        else if (m == "POSITION_PID")
+            mode = mab::MdMode_E::POSITION_PID;
+        else if (m == "VELOCITY_PID")
+            mode = mab::MdMode_E::VELOCITY_PID;
+        else if (m == "RAW_TORQUE")
+            mode = mab::MdMode_E::RAW_TORQUE;
+        else
+            mode = mab::MdMode_E::IDLE;
+        RCLCPP_WARN(this->get_logger(),
+                    "MODE %s not recognized, setting IDLE for drive with ID: %d",
+                    req->mode[i].c_str(),
+                    req->drive_ids[i]);
+        mode = mab::MdMode_E::IDLE;
+
+        auto it =
+            std::find_if(mds.begin(),
+                         mds.end(),
+                         [id = req->drive_ids[i]](const mab::MD& md) { return md.m_canId == id; });
+
+        if (it != mds.end())
+        {
+            if (it->setMotionMode(mode) == mab::MD::Error_t::OK)
+                rsp->drives_success.push_back(true);
+            else
+                rsp->drives_success.push_back(false);
+        }
+        else
+            rsp->drives_success.push_back(false);
+    }
     return;
 }
 
-void cbPositionCmd(const candle_ros::msg::PositionPidCmd& msg)
+void MdNode::cbEnable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
+                      std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
 {
+    for (auto id : req->drive_ids)
+    {
+        auto it = std::find_if(
+            mds.begin(), mds.end(), [id](const mab::MD& md) { return md.m_canId == id; });
+
+        if (it != mds.end())
+        {
+            if (it->enable() == mab::MD::Error_t::OK)
+                rsp->drives_success.push_back(true);
+            else
+                rsp->drives_success.push_back(false);
+        }
+        else
+            rsp->drives_success.push_back(false);
+    }
     return;
 }
 
-void cbVelocityCmd(const candle_ros::msg::VelocityPidCmd& msg)
+void MdNode::cbDisable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
+                       std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
 {
+    for (auto id : req->drive_ids)
+    {
+        auto it = std::find_if(
+            mds.begin(), mds.end(), [id](const mab::MD& md) { return md.m_canId == id; });
+
+        if (it != mds.end())
+        {
+            if (it->disable() == mab::MD::Error_t::OK)
+                rsp->drives_success.push_back(true);
+            else
+                rsp->drives_success.push_back(false);
+        }
+        else
+            rsp->drives_success.push_back(false);
+    }
     return;
 }
 
-void cbImpedanceCmd(const candle_ros::msg::ImpedanceCmd& msg)
+int main(int argc, char* argv[])
 {
-    return;
-}
-
-void cbAddMd(const std::shared_ptr<candle_ros::srv::AddMds::Request> req,
-             std::shared_ptr<candle_ros::srv::AddMds::Response>      rsp)
-{
-    return;
-}
-
-void cbZero(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
-            std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
-{
-    return;
-}
-
-void cbSetMode(const std::shared_ptr<candle_ros::srv::SetMode::Request> req,
-               std::shared_ptr<candle_ros::srv::SetMode::Response>      rsp)
-{
-    return;
-}
-
-void cbEnable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
-              std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
-{
-    return;
-}
-
-void cbDisable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
-               std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
-{
-    return;
-}
-
-// mab::Candle* Md80Node::findCandleByMd80Id(uint16_t md80Id)
-// {
-//     for (auto candle : candleInstances)
-//     {
-//         for (auto id : candle->md80s)
-//         {
-//             if (id.getId() == md80Id)
-//                 return candle;
-//         }
-//     }
-//     return NULL;
-// }
-
-int main(int argc, char** argv)
-{
-    ros::init(argc, argv, "candle_ros_node");
-    Md80Node n(argc, argv);
-    ros::spin();
-
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<MdNode>());
+    rclcpp::shutdown();
     return 0;
 }

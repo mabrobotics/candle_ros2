@@ -44,13 +44,21 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
-add_subdirectory(CANdle-SDK)
-
 add_executable(${node_name} src/md_node.cpp)
+
+set(CMAKE_SKIP_INSTALL_RULES ON)
+add_subdirectory(CANdle-SDK EXCLUDE_FROM_ALL)
+
+rosidl_get_typesupport_target(cpp_typesupport_target
+  ${PROJECT_NAME} rosidl_typesupport_cpp)
+target_link_libraries(${node_name} ${cpp_typesupport_target} candle)
+
 target_include_directories(${node_name} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+  $<INSTALL_INTERFACE:include>
+)
 target_compile_features(${node_name} PUBLIC c_std_99 cxx_std_20)
+
 ament_target_dependencies(
   ${node_name}
   "rclcpp"
@@ -58,7 +66,8 @@ ament_target_dependencies(
   "std_msgs"
 )
 
+set(CMAKE_SKIP_INSTALL_RULES OFF)
 install(TARGETS ${node_name}
   DESTINATION lib/${PROJECT_NAME})
 
-amnent_package()
+ament_package()

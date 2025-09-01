@@ -73,8 +73,8 @@ MdNode::MdNode() : Node("candle_ros_node")
         topicPrefix + "disable",
         std::bind(&MdNode::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 
-    // pubTimer = n.createTimer(ros::Duration(0.1), std::bind(&Md80Node::publishJointStates, this));
-    // pubTimer.stop();
+    tmrPub = this->create_wall_timer(std::chrono::milliseconds(100),
+                                     std::bind(&MdNode::publishJointStates, this));
 
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 node has started.");
 }
@@ -86,20 +86,17 @@ MdNode::~MdNode()
 
 void MdNode::publishJointStates()
 {
-    // sensor_msgs::JointState jointStateMsg;
-    // jointStateMsg.header.stamp = ros::Time::now();
-    // for (auto candle : candleInstances)
-    // {
-    //     for (auto& md : candle->md80s)
-    //     {
-    //         jointStateMsg.name.push_back(std::string("Joint " + std::to_string(md.getId())));
-    //         jointStateMsg.position.push_back(md.getPosition());
-    //         jointStateMsg.velocity.push_back(md.getVelocity());
-    //         jointStateMsg.effort.push_back(md.getTorque());
-    //     }
-    // }
+    sensor_msgs::msg::JointState msgJointStates;
 
-    // this->jointStatePub.publish(jointStateMsg);
+    msgJointStates.header.stamp = this->get_clock()->now();
+    for (auto& md : mds)
+    {
+        msgJointStates.name.push_back(std::string("Joint " + std::to_string(md.m_canId)));
+        msgJointStates.position.push_back(md.getPosition().first);
+        msgJointStates.velocity.push_back(md.getVelocity().first);
+        msgJointStates.effort.push_back(md.getTorque().first);
+    }
+    this->pubJointState->publish(msgJointStates);
     return;
 }
 

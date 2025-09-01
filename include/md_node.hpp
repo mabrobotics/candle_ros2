@@ -43,6 +43,8 @@ class MdNode : public rclcpp::Node
     rclcpp::Service<candle_ros::srv::Generic>::SharedPtr srvEnable;
     rclcpp::Service<candle_ros::srv::Generic>::SharedPtr srvDisable;
 
+    rclcpp::TimerBase::SharedPtr tmrPub;
+
     void publishJointStates();
 
     void cbMotionCmd(const candle_ros::msg::MotionCmd& msg);

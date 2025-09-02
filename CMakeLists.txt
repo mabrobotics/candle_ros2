@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(candle_ros)
-set(node_name md_node)
+
+set(md_node_name md_node)
+set(pds_node_name pds_node)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -31,7 +33,7 @@ set(msg_files
 )
 
 set(srv_files
-  "srv/AddMds.srv"
+  "srv/AddDevices.srv"
   "srv/Generic.srv"
   "srv/SetLimits.srv"
   "srv/SetMode.srv"
@@ -44,30 +46,43 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
-add_executable(${node_name} src/md_node.cpp)
+add_executable(${md_node_name} src/md_node.cpp)
+add_executable(${pds_node_name} src/pds_node.cpp)
 
 set(CMAKE_SKIP_INSTALL_RULES ON)
 add_subdirectory(CANdle-SDK EXCLUDE_FROM_ALL)
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)
-target_link_libraries(${node_name} ${cpp_typesupport_target} candle)
 
-target_include_directories(${node_name} PUBLIC
+target_link_libraries(${md_node_name} ${cpp_typesupport_target} candle)
+target_include_directories(${md_node_name} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-target_compile_features(${node_name} PUBLIC c_std_99 cxx_std_20)
+target_compile_features(${md_node_name} PUBLIC c_std_99 cxx_std_20)
 
 ament_target_dependencies(
-  ${node_name}
+  ${md_node_name}
   "rclcpp"
   "sensor_msgs"
-  "std_msgs"
+)
+
+target_link_libraries(${pds_node_name} ${cpp_typesupport_target} candle)
+target_include_directories(${pds_node_name} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_compile_features(${pds_node_name} PUBLIC c_std_99 cxx_std_20)
+
+ament_target_dependencies(
+  ${pds_node_name}
+  "rclcpp"
+  "sensor_msgs"
 )
 
 set(CMAKE_SKIP_INSTALL_RULES OFF)
-install(TARGETS ${node_name}
+install(TARGETS ${md_node_name} ${pds_node_name}
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

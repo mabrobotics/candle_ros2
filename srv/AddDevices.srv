@@ -1,4 +1,4 @@
 uint16[] device_ids
-string[] mode
 ---
 bool[] success
+uint16 total_devices

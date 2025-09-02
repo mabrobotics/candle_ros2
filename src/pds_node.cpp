@@ -66,6 +66,144 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
             TODO: After CANdle-SDK update, add safety checks
         ******************************************************
         */
+
+        mab::Pds::modulesSet_S pdsModules = pds.getModules();
+
+        RCLCPP_INFO(
+            this->get_logger(), "PDS with ID %d has the following set of connected modules:", id);
+        RCLCPP_INFO(this->get_logger(),
+                    "\tSocket 1 :: %s",
+                    mab::Pds::moduleTypeToString(pdsModules.moduleTypeSocket1));
+        RCLCPP_INFO(this->get_logger(),
+                    "\tSocket 2: %s",
+                    mab::Pds::moduleTypeToString(pdsModules.moduleTypeSocket2));
+        RCLCPP_INFO(this->get_logger(),
+                    "\tSocket 3: %s",
+                    mab::Pds::moduleTypeToString(pdsModules.moduleTypeSocket3));
+        RCLCPP_INFO(this->get_logger(),
+                    "\tSocket 4: %s",
+                    mab::Pds::moduleTypeToString(pdsModules.moduleTypeSocket4));
+        RCLCPP_INFO(this->get_logger(),
+                    "\tSocket 5: %s",
+                    mab::Pds::moduleTypeToString(pdsModules.moduleTypeSocket5));
+        RCLCPP_INFO(this->get_logger(),
+                    "\tSocket 6: %s",
+                    mab::Pds::moduleTypeToString(pdsModules.moduleTypeSocket6));
+
+        switch (pdsModules.moduleTypeSocket1)
+        {
+            case mab::moduleType_E::BRAKE_RESISTOR:
+                pds.attachBrakeResistor(mab::socketIndex_E::SOCKET_1);
+                break;
+            case mab::moduleType_E::ISOLATED_CONVERTER:
+                pds.attachIsolatedConverter(mab::socketIndex_E::SOCKET_1);
+                break;
+            case mab::moduleType_E::POWER_STAGE:
+                pds.attachPowerStage(mab::socketIndex_E::SOCKET_1);
+                break;
+            case mab::moduleType_E::CONTROL_BOARD:
+                break;
+            case mab::moduleType_E::UNDEFINED:
+                break;
+            default:
+                break;
+        }
+
+        switch (pdsModules.moduleTypeSocket2)
+        {
+            case mab::moduleType_E::BRAKE_RESISTOR:
+                pds.attachBrakeResistor(mab::socketIndex_E::SOCKET_2);
+                break;
+            case mab::moduleType_E::ISOLATED_CONVERTER:
+                pds.attachIsolatedConverter(mab::socketIndex_E::SOCKET_2);
+                break;
+            case mab::moduleType_E::POWER_STAGE:
+                pds.attachPowerStage(mab::socketIndex_E::SOCKET_2);
+                break;
+            case mab::moduleType_E::CONTROL_BOARD:
+                break;
+            case mab::moduleType_E::UNDEFINED:
+                break;
+            default:
+                break;
+        }
+
+        switch (pdsModules.moduleTypeSocket3)
+        {
+            case mab::moduleType_E::BRAKE_RESISTOR:
+                pds.attachBrakeResistor(mab::socketIndex_E::SOCKET_3);
+                break;
+            case mab::moduleType_E::ISOLATED_CONVERTER:
+                pds.attachIsolatedConverter(mab::socketIndex_E::SOCKET_3);
+                break;
+            case mab::moduleType_E::POWER_STAGE:
+                pds.attachPowerStage(mab::socketIndex_E::SOCKET_3);
+                break;
+            case mab::moduleType_E::CONTROL_BOARD:
+                break;
+            case mab::moduleType_E::UNDEFINED:
+                break;
+            default:
+                break;
+        }
+
+        switch (pdsModules.moduleTypeSocket4)
+        {
+            case mab::moduleType_E::BRAKE_RESISTOR:
+                pds.attachBrakeResistor(mab::socketIndex_E::SOCKET_4);
+                break;
+            case mab::moduleType_E::ISOLATED_CONVERTER:
+                pds.attachIsolatedConverter(mab::socketIndex_E::SOCKET_4);
+                break;
+            case mab::moduleType_E::POWER_STAGE:
+                pds.attachPowerStage(mab::socketIndex_E::SOCKET_4);
+                break;
+            case mab::moduleType_E::CONTROL_BOARD:
+                break;
+            case mab::moduleType_E::UNDEFINED:
+                break;
+            default:
+                break;
+        }
+
+        switch (pdsModules.moduleTypeSocket5)
+        {
+            case mab::moduleType_E::BRAKE_RESISTOR:
+                pds.attachBrakeResistor(mab::socketIndex_E::SOCKET_5);
+                break;
+            case mab::moduleType_E::ISOLATED_CONVERTER:
+                pds.attachIsolatedConverter(mab::socketIndex_E::SOCKET_5);
+                break;
+            case mab::moduleType_E::POWER_STAGE:
+                pds.attachPowerStage(mab::socketIndex_E::SOCKET_5);
+                break;
+            case mab::moduleType_E::CONTROL_BOARD:
+                break;
+            case mab::moduleType_E::UNDEFINED:
+                break;
+            default:
+                break;
+        }
+
+        switch (pdsModules.moduleTypeSocket6)
+        {
+            case mab::moduleType_E::BRAKE_RESISTOR:
+                pds.attachBrakeResistor(mab::socketIndex_E::SOCKET_6);
+                break;
+            case mab::moduleType_E::ISOLATED_CONVERTER:
+                pds.attachIsolatedConverter(mab::socketIndex_E::SOCKET_6);
+                break;
+            case mab::moduleType_E::POWER_STAGE:
+                pds.attachPowerStage(mab::socketIndex_E::SOCKET_6);
+                break;
+            case mab::moduleType_E::CONTROL_BOARD:
+                break;
+            case mab::moduleType_E::UNDEFINED:
+                break;
+            default:
+                break;
+        }
+
         pds_list.push_back(std::move(pds));
         rsp->success.push_back(true);
     }

@@ -2,10 +2,55 @@
 
 PdsNode::PdsNode() : Node("candle_pds_node")
 {
-    RCLCPP_INFO(this->get_logger(), "Candle ROS2 node has started.");
+    this->declare_parameter<std::string>("baud", "1M");
+    this->declare_parameter<std::string>("bus", "USB");
+
+    auto baud = mab::CANdleBaudrate_E::CAN_BAUD_1M;
+    auto bus  = mab::candleTypes::busTypes_t::USB;
+
+    std::string paramBaud = this->get_parameter("baud").as_string();
+    std::string paramBus  = this->get_parameter("bus").as_string();
+
+    if (paramBaud == "1M")
+        baud = mab::CANdleBaudrate_E::CAN_BAUD_1M;
+    else if (paramBaud == "2M")
+        baud = mab::CANdleBaudrate_E::CAN_BAUD_2M;
+    else if (paramBaud == "5M")
+        baud = mab::CANdleBaudrate_E::CAN_BAUD_5M;
+    else if (paramBaud == "8M")
+        baud = mab::CANdleBaudrate_E::CAN_BAUD_8M;
+    else
+    {
+        RCLCPP_INFO(
+            this->get_logger(), "<baud> parameter not recognised! Value: '%s'", paramBaud.c_str());
+        return;
+    }
+
+    if (paramBus == "SPI")
+        bus = mab::candleTypes::busTypes_t::SPI;
+    else if (paramBus == "USB")
+        bus = mab::candleTypes::busTypes_t::USB;
+    else
+    {
+        RCLCPP_INFO(
+            this->get_logger(), "<bus> parameter not recognised! Value: %s", paramBus.c_str());
+        return;
+    }
+
+    candle = std::unique_ptr<mab::Candle>(mab::attachCandle(baud, bus));
+
+    RCLCPP_INFO(this->get_logger(), "Candle ROS2 PDS node started.");
 }
 
 PdsNode::~PdsNode()
 {
-    RCLCPP_INFO(this->get_logger(), "Candle ROS2 node finished.");
+    RCLCPP_INFO(this->get_logger(), "Candle ROS2 PDS node finished.");
+}
+
+int main(int argc, char* argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<PdsNode>());
+    rclcpp::shutdown();
+    return 0;
 }

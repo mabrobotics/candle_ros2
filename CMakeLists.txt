@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(candle_ros)
+project(candle_ros2)
 
 set(md_node_name md_node)
 set(pds_node_name pds_node)

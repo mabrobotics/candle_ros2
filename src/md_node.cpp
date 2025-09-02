@@ -42,36 +42,36 @@ MdNode::MdNode() : Node("candle_md_node")
     pubJointState =
         this->create_publisher<sensor_msgs::msg::JointState>(topicPrefix + "joint_states", 10);
 
-    subMotionCmd = this->create_subscription<candle_ros::msg::MotionCmd>(
+    subMotionCmd = this->create_subscription<candle_ros2::msg::MotionCmd>(
         topicPrefix + "motion_command",
         10,
         std::bind(&MdNode::cbMotionCmd, this, std::placeholders::_1));
-    subPositionCmd = this->create_subscription<candle_ros::msg::PositionPidCmd>(
+    subPositionCmd = this->create_subscription<candle_ros2::msg::PositionPidCmd>(
         topicPrefix + "position_command",
         10,
         std::bind(&MdNode::cbPositionCmd, this, std::placeholders::_1));
-    subVelocityCmd = this->create_subscription<candle_ros::msg::VelocityPidCmd>(
+    subVelocityCmd = this->create_subscription<candle_ros2::msg::VelocityPidCmd>(
         topicPrefix + "velocity_command",
         10,
         std::bind(&MdNode::cbVelocityCmd, this, std::placeholders::_1));
-    subImpedanceCmd = this->create_subscription<candle_ros::msg::ImpedanceCmd>(
+    subImpedanceCmd = this->create_subscription<candle_ros2::msg::ImpedanceCmd>(
         topicPrefix + "impedance_command",
         10,
         std::bind(&MdNode::cbImpedanceCmd, this, std::placeholders::_1));
 
-    srvAddMd = this->create_service<candle_ros::srv::AddDevices>(
+    srvAddMd = this->create_service<candle_ros2::srv::AddDevices>(
         topicPrefix + "add_mds",
         std::bind(&MdNode::cbAddMd, this, std::placeholders::_1, std::placeholders::_2));
-    srvZero = this->create_service<candle_ros::srv::Generic>(
+    srvZero = this->create_service<candle_ros2::srv::Generic>(
         topicPrefix + "zero",
         std::bind(&MdNode::cbZero, this, std::placeholders::_1, std::placeholders::_2));
-    srvSetMode = this->create_service<candle_ros::srv::SetMode>(
+    srvSetMode = this->create_service<candle_ros2::srv::SetMode>(
         topicPrefix + "set_mode",
         std::bind(&MdNode::cbSetMode, this, std::placeholders::_1, std::placeholders::_2));
-    srvEnable = this->create_service<candle_ros::srv::Generic>(
+    srvEnable = this->create_service<candle_ros2::srv::Generic>(
         topicPrefix + "enable",
         std::bind(&MdNode::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
-    srvDisable = this->create_service<candle_ros::srv::Generic>(
+    srvDisable = this->create_service<candle_ros2::srv::Generic>(
         topicPrefix + "disable",
         std::bind(&MdNode::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -102,7 +102,7 @@ void MdNode::publishJointStates()
     return;
 }
 
-void MdNode::cbMotionCmd(const candle_ros::msg::MotionCmd& msg)
+void MdNode::cbMotionCmd(const candle_ros2::msg::MotionCmd& msg)
 {
     size_t n = msg.device_ids.size();
 
@@ -143,7 +143,7 @@ void MdNode::cbMotionCmd(const candle_ros::msg::MotionCmd& msg)
     return;
 }
 
-void MdNode::cbPositionCmd(const candle_ros::msg::PositionPidCmd& msg)
+void MdNode::cbPositionCmd(const candle_ros2::msg::PositionPidCmd& msg)
 {
     size_t n = msg.device_ids.size();
 
@@ -205,7 +205,7 @@ void MdNode::cbPositionCmd(const candle_ros::msg::PositionPidCmd& msg)
     return;
 }
 
-void MdNode::cbVelocityCmd(const candle_ros::msg::VelocityPidCmd& msg)
+void MdNode::cbVelocityCmd(const candle_ros2::msg::VelocityPidCmd& msg)
 {
     size_t n = msg.device_ids.size();
 
@@ -248,7 +248,7 @@ void MdNode::cbVelocityCmd(const candle_ros::msg::VelocityPidCmd& msg)
     return;
 }
 
-void MdNode::cbImpedanceCmd(const candle_ros::msg::ImpedanceCmd& msg)
+void MdNode::cbImpedanceCmd(const candle_ros2::msg::ImpedanceCmd& msg)
 {
     size_t n = msg.device_ids.size();
 
@@ -288,8 +288,8 @@ void MdNode::cbImpedanceCmd(const candle_ros::msg::ImpedanceCmd& msg)
     return;
 }
 
-void MdNode::cbAddMd(const std::shared_ptr<candle_ros::srv::AddDevices::Request> req,
-                     std::shared_ptr<candle_ros::srv::AddDevices::Response>      rsp)
+void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request> req,
+                     std::shared_ptr<candle_ros2::srv::AddDevices::Response>      rsp)
 {
     rsp->success.reserve(req->device_ids.size());
 
@@ -308,8 +308,8 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros::srv::AddDevices::Request>
     return;
 }
 
-void MdNode::cbZero(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
-                    std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
+void MdNode::cbZero(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
+                    std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
 {
     rsp->success.reserve(req->device_ids.size());
 
@@ -331,8 +331,8 @@ void MdNode::cbZero(const std::shared_ptr<candle_ros::srv::Generic::Request> req
     return;
 }
 
-void MdNode::cbSetMode(const std::shared_ptr<candle_ros::srv::SetMode::Request> req,
-                       std::shared_ptr<candle_ros::srv::SetMode::Response>      rsp)
+void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request> req,
+                       std::shared_ptr<candle_ros2::srv::SetMode::Response>      rsp)
 {
     if (req->device_ids.size() != req->mode.size())
     {
@@ -385,8 +385,8 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros::srv::SetMode::Request> 
     return;
 }
 
-void MdNode::cbEnable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
-                      std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
+void MdNode::cbEnable(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
+                      std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
 {
     rsp->success.reserve(req->device_ids.size());
 
@@ -408,8 +408,8 @@ void MdNode::cbEnable(const std::shared_ptr<candle_ros::srv::Generic::Request> r
     return;
 }
 
-void MdNode::cbDisable(const std::shared_ptr<candle_ros::srv::Generic::Request> req,
-                       std::shared_ptr<candle_ros::srv::Generic::Response>      rsp)
+void MdNode::cbDisable(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
+                       std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
 {
     rsp->success.reserve(req->device_ids.size());
 

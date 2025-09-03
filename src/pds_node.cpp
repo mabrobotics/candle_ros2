@@ -56,45 +56,6 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 {
     rsp->success.reserve(req->device_ids.size());
 
-    using ModulePtr = mab::moduleType_E mab::Pds::modulesSet_S::*;
-
-    ModulePtr sockets[] = {
-        &mab::Pds::modulesSet_S::moduleTypeSocket1,
-        &mab::Pds::modulesSet_S::moduleTypeSocket2,
-        &mab::Pds::modulesSet_S::moduleTypeSocket3,
-        &mab::Pds::modulesSet_S::moduleTypeSocket4,
-        &mab::Pds::modulesSet_S::moduleTypeSocket5,
-        &mab::Pds::modulesSet_S::moduleTypeSocket6,
-    };
-
-    mab::socketIndex_E socketIndices[] = {
-        mab::socketIndex_E::SOCKET_1,
-        mab::socketIndex_E::SOCKET_2,
-        mab::socketIndex_E::SOCKET_3,
-        mab::socketIndex_E::SOCKET_4,
-        mab::socketIndex_E::SOCKET_5,
-        mab::socketIndex_E::SOCKET_6,
-    };
-
-    auto attachModule = [](mab::Pds& pds, mab::moduleType_E type, mab::socketIndex_E idx)
-    {
-        switch (type)
-        {
-            case mab::moduleType_E::BRAKE_RESISTOR:
-                pds.attachBrakeResistor(idx);
-                break;
-            case mab::moduleType_E::ISOLATED_CONVERTER:
-                pds.attachIsolatedConverter(idx);
-                break;
-            case mab::moduleType_E::POWER_STAGE:
-                pds.attachPowerStage(idx);
-                break;
-            default:
-                /* CONTROL_BOARD and UNDEFINED do nothing */
-                break;
-        }
-    };
-
     for (auto id : req->device_ids)
     {
         mab::Pds pds(id, candle.get());
@@ -108,22 +69,57 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
         mab::Pds::modulesSet_S pdsModules = pds.getModules();
 
-        RCLCPP_INFO(
-            this->get_logger(), "PDS with ID %d has the following set of connected modules:", id);
+        PdsInstance instance(std::move(pds));
 
-        for (size_t i = 0; i < 6; ++i)
+        using ModulePtr = mab::moduleType_E mab::Pds::modulesSet_S::*;
+
+        ModulePtr sockets[] = {&mab::Pds::modulesSet_S::moduleTypeSocket1,
+                               &mab::Pds::modulesSet_S::moduleTypeSocket2,
+                               &mab::Pds::modulesSet_S::moduleTypeSocket3,
+                               &mab::Pds::modulesSet_S::moduleTypeSocket4,
+                               &mab::Pds::modulesSet_S::moduleTypeSocket5,
+                               &mab::Pds::modulesSet_S::moduleTypeSocket6};
+
+        for (int i = 0; i < 6; i++)
         {
             mab::moduleType_E type = pdsModules.*(sockets[i]);
-            RCLCPP_INFO(
-                this->get_logger(), "\tSocket %zu: %s", i + 1, mab::Pds::moduleTypeToString(type));
-            attachModule(pds, type, socketIndices[i]);
+            auto              mod  = createModule(type);
+            // TODO: check if module was created
+            if (mod)
+            {
+                // TODO: check return value (bool)
+                mod->setup(shared_from_this(),
+                           instance.pds,
+                           static_cast<mab::socketIndex_E>(i + 1),
+                           PUB_TIMER_MS);
+                instance.modules.push_back(std::move(mod));
+            }
         }
 
-        pds_list.push_back(std::move(pds));
+        pds_list.emplace_back(std::move(instance));
         rsp->success.push_back(true);
     }
 
     rsp->total_devices = static_cast<u16>(pds_list.size());
+}
+
+std::unique_ptr<BaseModuleRos> PdsNode::createModule(mab::moduleType_E type)
+{
+    switch (type)
+    {
+        case mab::moduleType_E::BRAKE_RESISTOR:
+            return std::make_unique<BrakeResistorRos>();
+        case mab::moduleType_E::POWER_STAGE:
+            return std::make_unique<PowerStageRos>();
+        case mab::moduleType_E::ISOLATED_CONVERTER:
+            return std::make_unique<IsolatedConverterRos>();
+        case mab::moduleType_E::CONTROL_BOARD:
+        case mab::moduleType_E::UNDEFINED:
+            break;
+        default:
+            break;
+    }
+    return nullptr;
 }
 
 int main(int argc, char* argv[])

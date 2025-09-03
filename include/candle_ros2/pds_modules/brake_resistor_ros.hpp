@@ -2,6 +2,8 @@
 
 #include "candle_ros2/msg/brake_resistor_data.hpp"
 
+#include "candle_ros2/pds_modules/base_module_ros.hpp"
+
 #include "pds.hpp"
 
 class BrakeResistorRos : public BaseModuleRos
@@ -12,40 +14,12 @@ class BrakeResistorRos : public BaseModuleRos
                mab::socketIndex_E            socket,
                const int                     pdsId,
                const std::string&            nodePrefix = "pds/",
-               const int                     timerMs    = 1000) override
-    {
-        parentNode = node;
-
-        brakeResistor = pds.attachBrakeResistor(socket);
-        if (brakeResistor == nullptr)
-            return false;
-
-        pubData = parentNode->create_publisher<candle_ros2::msg::BrakeResistorData>(
-            nodePrefix + std::to_string(pdsId) + "/brake_resistor_" +
-                std::to_string(static_cast<int>(socket)),
-            10);
-
-        tmrPub = parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
-                                               [this]() { this->publishStatus(); });
-
-        return true;
-    }
-
-    void publishStatus()
-    {
-        auto msg = candle_ros2::msg::BrakeResistorData();
-
-        msg.header.stamp = parentNode->get_clock()->now();
-
-        brakeResistor->getEnabled(msg.enabled);
-        brakeResistor->getTemperature(msg.temperature);
-        brakeResistor->getTemperatureLimit(msg.temperature_limit);
-
-        pubData->publish(msg);
-    }
+               const int                     timerMs    = 1000) override;
 
   private:
     std::shared_ptr<mab::BrakeResistor> brakeResistor;
 
     rclcpp::Publisher<candle_ros2::msg::BrakeResistorData>::SharedPtr pubData;
+
+    void publishStatus();
 };

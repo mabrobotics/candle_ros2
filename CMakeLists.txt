@@ -9,7 +9,7 @@ if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
 
-# Default to C++14
+# Default to C++20
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
 endif()
@@ -50,8 +50,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
+file(GLOB_RECURSE sources "src/pds_modules/*.cpp")
+
 add_executable(${md_node_name} src/md_node.cpp)
-add_executable(${pds_node_name} src/pds_node.cpp)
+add_executable(${pds_node_name} src/pds_node.cpp ${sources})
 
 set(CMAKE_SKIP_INSTALL_RULES ON)
 add_subdirectory(CANdle-SDK EXCLUDE_FROM_ALL)

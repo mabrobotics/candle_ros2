@@ -14,12 +14,21 @@ bool BrakeResistorRos::setup(std::shared_ptr<rclcpp::Node> node,
         return false;
 
     pubData = parentNode->create_publisher<candle_ros2::msg::BrakeResistorData>(
-        nodePrefix + std::to_string(pdsId) + "/brake_resistor_" +
+        nodePrefix + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         10);
 
+    srvEnable = parentNode->create_service<candle_ros2::srv::GenericPds>(
+        nodePrefix + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +
+            std::to_string(static_cast<int>(socket)),
+        std::bind(&BrakeResistorRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
+    srvDisable = parentNode->create_service<candle_ros2::srv::GenericPds>(
+        nodePrefix + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
+            std::to_string(static_cast<int>(socket)),
+        std::bind(&BrakeResistorRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
+
     tmrPub = parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
-                                           [this]() { this->publishStatus(); });
+                                           std::bind(&BrakeResistorRos::publishStatus, this));
 
     return true;
 }
@@ -35,4 +44,23 @@ void BrakeResistorRos::publishStatus()
     brakeResistor->getTemperatureLimit(msg.temperature_limit);
 
     pubData->publish(msg);
+}
+
+void BrakeResistorRos::cbEnable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
+                                std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
+{
+    if (brakeResistor->enable() != mab::PdsModule::error_E::OK)
+        rsp->success.push_back(false);
+    else
+        rsp->success.push_back(true);
+    return;
+}
+void BrakeResistorRos::cbDisable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
+                                 std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
+{
+    if (brakeResistor->disable() != mab::PdsModule::error_E::OK)
+        rsp->success.push_back(false);
+    else
+        rsp->success.push_back(true);
+    return;
 }

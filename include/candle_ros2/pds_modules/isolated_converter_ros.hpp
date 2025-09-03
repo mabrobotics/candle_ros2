@@ -1,9 +1,15 @@
 #include "rclcpp/rclcpp.hpp"
 
+/* Messages */
 #include "candle_ros2/msg/isolated_converter_data.hpp"
 
+/* Services */
+#include "candle_ros2/srv/generic_pds.hpp"
+
+/* PDS ROS2 modules */
 #include "candle_ros2/pds_modules/base_module_ros.hpp"
 
+/* CANdle-SDK */
 #include "pds.hpp"
 
 class IsolatedConverterRos : public BaseModuleRos
@@ -17,9 +23,19 @@ class IsolatedConverterRos : public BaseModuleRos
                const int                     timerMs    = 1000) override;
 
   private:
+    static constexpr const char* MODULE_NAME = "isolated_converter";
+
     std::shared_ptr<mab::IsolatedConv> isolatedConverter;
 
     rclcpp::Publisher<candle_ros2::msg::IsolatedConverterData>::SharedPtr pubData;
 
+    rclcpp::Service<candle_ros2::srv::GenericPds>::SharedPtr srvEnable;
+    rclcpp::Service<candle_ros2::srv::GenericPds>::SharedPtr srvDisable;
+
     void publishStatus();
+
+    void cbEnable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
+                  std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp);
+    void cbDisable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
+                   std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp);
 };

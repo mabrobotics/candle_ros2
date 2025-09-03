@@ -38,6 +38,7 @@ set(msg_files
 set(srv_files
   "srv/AddDevices.srv"
   "srv/Generic.srv"
+  "srv/GenericPds.srv"
   "srv/SetLimits.srv"
   "srv/SetMode.srv"
 )

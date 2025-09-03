@@ -1,4 +1,4 @@
-#include "pds_node.hpp"
+#include "candle_ros2/pds_node.hpp"
 
 PdsNode::PdsNode() : Node("candle_pds_node")
 {

@@ -9,6 +9,8 @@
 #include "candle.hpp"
 #include "pds.hpp"
 
+#include "brake_resistor_ros.hpp"
+
 class PdsNode : public rclcpp::Node
 {
   public:
@@ -18,6 +20,8 @@ class PdsNode : public rclcpp::Node
   private:
     std::unique_ptr<mab::Candle> candle;
     std::vector<mab::Pds>        pds_list;
+
+    std::vector<std::unique_ptr<BrakeResistorRos>> br_list;
 
     std::string topicPrefix = "pds/";
 

@@ -10,7 +10,9 @@ class IsolatedConverterRos : public BaseModuleRos
     bool setup(std::shared_ptr<rclcpp::Node> node,
                mab::Pds&                     pds,
                mab::socketIndex_E            socket,
-               const int                     timerMs = 1000) override
+               const int                     pdsId,
+               const std::string&            nodePrefix = "pds/",
+               const int                     timerMs    = 1000) override
     {
         parentNode = node;
 
@@ -19,7 +21,9 @@ class IsolatedConverterRos : public BaseModuleRos
             return false;
 
         pubData = parentNode->create_publisher<candle_ros2::msg::IsolatedConverterData>(
-            "isolated_converter_" + std::to_string(static_cast<int>(socket)), 10);
+            nodePrefix + std::to_string(pdsId) + "/isolated_converter_" +
+                std::to_string(static_cast<int>(socket)),
+            10);
 
         tmrPub = parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
                                                [this]() { this->publishStatus(); });

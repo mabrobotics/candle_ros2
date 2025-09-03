@@ -40,7 +40,7 @@ PdsNode::PdsNode() : Node("candle_pds_node")
     candle = std::unique_ptr<mab::Candle>(mab::attachCandle(baud, bus));
 
     srvAddPds = this->create_service<candle_ros2::srv::AddDevices>(
-        topicPrefix + "add_pds",
+        std::string(NODE_PREFIX) + "add_pds",
         std::bind(&PdsNode::cbAddPds, this, std::placeholders::_1, std::placeholders::_2));
 
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 PDS node started.");
@@ -91,6 +91,8 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
                 mod->setup(shared_from_this(),
                            instance.pds,
                            static_cast<mab::socketIndex_E>(i + 1),
+                           id,
+                           NODE_PREFIX,
                            PUB_TIMER_MS);
                 instance.modules.push_back(std::move(mod));
             }

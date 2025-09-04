@@ -2,27 +2,28 @@
 
 PdsNode::PdsNode() : Node("candle_pds_node")
 {
-    this->declare_parameter<std::string>("baud", "1M");
+    this->declare_parameter<std::string>("data_rate", "1M");
     this->declare_parameter<std::string>("bus", "USB");
 
-    auto baud = mab::CANdleBaudrate_E::CAN_BAUD_1M;
-    auto bus  = mab::candleTypes::busTypes_t::USB;
+    auto dataRate = mab::CANdleDatarate_E::CAN_DATARATE_1M;
+    auto bus      = mab::candleTypes::busTypes_t::USB;
 
-    std::string paramBaud = this->get_parameter("baud").as_string();
-    std::string paramBus  = this->get_parameter("bus").as_string();
+    std::string paramDataRate = this->get_parameter("data_rate").as_string();
+    std::string paramBus      = this->get_parameter("bus").as_string();
 
-    if (paramBaud == "1M")
-        baud = mab::CANdleBaudrate_E::CAN_BAUD_1M;
-    else if (paramBaud == "2M")
-        baud = mab::CANdleBaudrate_E::CAN_BAUD_2M;
-    else if (paramBaud == "5M")
-        baud = mab::CANdleBaudrate_E::CAN_BAUD_5M;
-    else if (paramBaud == "8M")
-        baud = mab::CANdleBaudrate_E::CAN_BAUD_8M;
+    if (paramDataRate == "1M")
+        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_1M;
+    else if (paramDataRate == "2M")
+        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_2M;
+    else if (paramDataRate == "5M")
+        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_5M;
+    else if (paramDataRate == "8M")
+        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_8M;
     else
     {
-        RCLCPP_INFO(
-            this->get_logger(), "<baud> parameter not recognised! Value: '%s'", paramBaud.c_str());
+        RCLCPP_INFO(this->get_logger(),
+                    "<data_rate> parameter not recognised! Value: '%s'",
+                    paramDataRate.c_str());
         return;
     }
 
@@ -37,7 +38,7 @@ PdsNode::PdsNode() : Node("candle_pds_node")
         return;
     }
 
-    candle = std::unique_ptr<mab::Candle>(mab::attachCandle(baud, bus));
+    candle = std::unique_ptr<mab::Candle>(mab::attachCandle(dataRate, bus));
 
     srvAddPds = this->create_service<candle_ros2::srv::AddDevices>(
         std::string(NODE_PREFIX) + "add_pds",

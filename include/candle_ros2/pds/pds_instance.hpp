@@ -5,12 +5,11 @@
 
 struct PdsInstance
 {
-    mab::Pds                                    pds;
+    std::unique_ptr<mab::Pds>                   pds;
+    std::unique_ptr<BaseModuleRos>              ctrlModule;
     std::vector<std::unique_ptr<BaseModuleRos>> modules;
 
-    explicit PdsInstance(mab::Pds&& p) : pds(std::move(p))
-    {
-    }
+    PdsInstance() = default;
 
     PdsInstance(PdsInstance&&) noexcept            = default;
     PdsInstance& operator=(PdsInstance&&) noexcept = default;

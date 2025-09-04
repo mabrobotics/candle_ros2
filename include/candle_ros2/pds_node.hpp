@@ -5,11 +5,12 @@
 #include "candle_ros2/srv/add_devices.hpp"
 #include "candle_ros2/srv/generic.hpp"
 
-/* PDS with modules container */
+/* PDS and modules objects container */
 #include "candle_ros2/pds/pds_instance.hpp"
 
 /* PDS ROS2 modules */
 #include "candle_ros2/pds_modules/brake_resistor_ros.hpp"
+#include "candle_ros2/pds_modules/control_module_ros.hpp"
 #include "candle_ros2/pds_modules/isolated_converter_ros.hpp"
 #include "candle_ros2/pds_modules/power_stage_ros.hpp"
 
@@ -31,11 +32,17 @@ class PdsNode : public rclcpp::Node
     static constexpr int         PUB_TIMER_MS = 100;
 
     rclcpp::Service<candle_ros2::srv::AddDevices>::SharedPtr srvAddPds;
+    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr    srvReboot;
+    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr    srvShutdown;
 
     rclcpp::TimerBase::SharedPtr tmrPub;
 
     void cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Request> req,
                   std::shared_ptr<candle_ros2::srv::AddDevices::Response>      rsp);
+    void cbReboot(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
+                  std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
+    void cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
+                    std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
 
     std::unique_ptr<BaseModuleRos> createModule(mab::moduleType_E type);
 };

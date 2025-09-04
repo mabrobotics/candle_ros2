@@ -31,6 +31,7 @@ set(msg_files
   "msg/VelocityPidCmd.msg"
   "msg/PositionPidCmd.msg"
   "msg/BrakeResistorData.msg"
+  "msg/ControlModuleData.msg"
   "msg/IsolatedConverterData.msg"
   "msg/PowerStageData.msg"  
 )

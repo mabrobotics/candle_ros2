@@ -68,11 +68,6 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
         auto instance = PdsInstance{};
         instance.pds  = std::make_unique<mab::Pds>(id, candle.get());
         instance.pds->init();
-        /*
-        ******************************************************
-            TODO: After CANdle-SDK update, add safety checks
-        ******************************************************
-        */
 
         mab::Pds::modulesSet_S pdsModules = instance.pds->getModules();
 
@@ -86,31 +81,34 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
                                &mab::Pds::modulesSet_S::moduleTypeSocket6};
 
         auto ctrl = std::make_unique<ControlModuleRos>();
-        ctrl->setup(shared_from_this(),
-                    *instance.pds,
-                    mab::socketIndex_E::UNASSIGNED,
-                    id,
-                    NODE_PREFIX,
-                    PUB_TIMER_MS);
-
-        // instance.ctrlModule = std::move(ctrl);
-        instance.modules.push_back(std::move(ctrl));
+        if (ctrl->setup(shared_from_this(),
+                        *instance.pds,
+                        mab::socketIndex_E::UNASSIGNED,
+                        id,
+                        NODE_PREFIX,
+                        PUB_TIMER_MS))
+            instance.modules.push_back(std::move(ctrl));
+        else
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to setup control module for PDS id %d", id);
+            rsp->success.push_back(false);
+            continue;
+        }
 
         for (int i = 0; i < 6; i++)
         {
             mab::moduleType_E type = pdsModules.*(sockets[i]);
             auto              mod  = createModule(type);
-            // TODO: check if module was created
+
             if (mod)
             {
-                // TODO: check return value (bool)
-                mod->setup(shared_from_this(),
-                           *instance.pds,
-                           static_cast<mab::socketIndex_E>(i + 1),
-                           id,
-                           NODE_PREFIX,
-                           PUB_TIMER_MS);
-                instance.modules.push_back(std::move(mod));
+                if (mod->setup(shared_from_this(),
+                               *instance.pds,
+                               static_cast<mab::socketIndex_E>(i + 1),
+                               id,
+                               NODE_PREFIX,
+                               PUB_TIMER_MS))
+                    instance.modules.push_back(std::move(mod));
             }
         }
 

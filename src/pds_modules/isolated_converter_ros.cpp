@@ -14,17 +14,17 @@ bool IsolatedConverterRos::setup(std::shared_ptr<rclcpp::Node> node,
         return false;
 
     pubData = parentNode->create_publisher<candle_ros2::msg::IsolatedConverterData>(
-        nodePrefix + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
+        nodePrefix + "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         10);
 
     srvEnable = parentNode->create_service<candle_ros2::srv::GenericPds>(
-        nodePrefix + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +
+        nodePrefix + "id_" + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         std::bind(
             &IsolatedConverterRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
     srvDisable = parentNode->create_service<candle_ros2::srv::GenericPds>(
-        nodePrefix + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
+        nodePrefix + "id_" + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         std::bind(
             &IsolatedConverterRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
@@ -44,8 +44,9 @@ void IsolatedConverterRos::publishStatus()
     isolatedConverter->getEnabled(msg.enabled);
     isolatedConverter->getOutputVoltage(msg.output_voltage);
     isolatedConverter->getLoadCurrent(msg.load_current);
-    isolatedConverter->getPower(msg.power);
-    isolatedConverter->getEnergy(msg.energy);
+    /* Power and energy reads are not implemented yet */
+    // isolatedConverter->getPower(msg.power);
+    // isolatedConverter->getEnergy(msg.energy);
     isolatedConverter->getOcdLevel(msg.ocd_level);
     isolatedConverter->getOcdDelay(msg.ocd_delay);
     isolatedConverter->getTemperature(msg.temperature);

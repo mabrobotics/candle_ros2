@@ -28,7 +28,7 @@ class MdNode : public rclcpp::Node
     std::unique_ptr<mab::Candle> candle;
     std::vector<mab::MD>         mds;
 
-    std::string topicPrefix = "md/";
+    static constexpr const char* NODE_PREFIX = "md/";
 
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pubJointState;
 

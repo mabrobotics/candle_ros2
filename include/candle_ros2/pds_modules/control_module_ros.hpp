@@ -3,9 +3,6 @@
 /* Messages */
 #include "candle_ros2/msg/control_module_data.hpp"
 
-/* Services */
-#include "candle_ros2/srv/generic_pds.hpp"
-
 /* PDS ROS2 modules */
 #include "candle_ros2/pds_modules/base_module_ros.hpp"
 

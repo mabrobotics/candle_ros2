@@ -62,4 +62,6 @@ class MdNode : public rclcpp::Node
                   std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
     void cbDisable(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                    std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
+
+    std::vector<mab::MD>::iterator findMd(std::vector<mab::MD>& mds, u16 id);
 };

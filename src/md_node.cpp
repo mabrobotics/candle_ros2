@@ -91,6 +91,11 @@ void MdNode::publishJointStates()
 {
     sensor_msgs::msg::JointState msgJointStates;
 
+    msgJointStates.name.reserve(mds.size());
+    msgJointStates.position.reserve(mds.size());
+    msgJointStates.velocity.reserve(mds.size());
+    msgJointStates.effort.reserve(mds.size());
+
     msgJointStates.header.stamp = this->get_clock()->now();
     for (auto& md : mds)
     {
@@ -118,28 +123,25 @@ void MdNode::cbMotionCmd(const candle_ros2::msg::MotionCmd& msg)
 
     for (size_t i = 0; i < n; i++)
     {
-        auto md =
-            std::find_if(mds.begin(),
-                         mds.end(),
-                         [id = msg.device_ids[i]](const mab::MD& m) { return m.m_canId == id; });
-
-        if (md != mds.end())
+        auto md = findMd(mds, msg.device_ids[i]);
+        if (md == mds.end())
         {
-            if (md->setTargetPosition(msg.target_position[i]) != mab::MD::Error_t::OK)
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Target Position for drive with ID: %d",
-                            msg.device_ids[i]);
-            if (md->setTargetVelocity(msg.target_velocity[i]) != mab::MD::Error_t::OK)
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Target Velocity for drive with ID: %d",
-                            msg.device_ids[i]);
-            if (md->setTargetTorque(msg.target_torque[i]) != mab::MD::Error_t::OK)
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Target Torque for drive with ID: %d",
-                            msg.device_ids[i]);
-        }
-        else
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
+            continue;
+        }
+
+        if (md->setTargetPosition(msg.target_position[i]) != mab::MD::Error_t::OK)
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Target Position for drive with ID: %d",
+                        msg.device_ids[i]);
+        if (md->setTargetVelocity(msg.target_velocity[i]) != mab::MD::Error_t::OK)
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Target Velocity for drive with ID: %d",
+                        msg.device_ids[i]);
+        if (md->setTargetTorque(msg.target_torque[i]) != mab::MD::Error_t::OK)
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Target Torque for drive with ID: %d",
+                        msg.device_ids[i]);
     }
     return;
 }
@@ -158,50 +160,47 @@ void MdNode::cbPositionCmd(const candle_ros2::msg::PositionPidCmd& msg)
 
     for (size_t i = 0; i < n; i++)
     {
-        auto md =
-            std::find_if(mds.begin(),
-                         mds.end(),
-                         [id = msg.device_ids[i]](const mab::MD& m) { return m.m_canId == id; });
-
-        if (md != mds.end())
+        auto md = findMd(mds, msg.device_ids[i]);
+        if (md == mds.end())
         {
-            if (md->setPositionPIDparam(msg.position_pid[i].kp,
-                                        msg.position_pid[i].ki,
-                                        msg.position_pid[i].kd,
-                                        msg.position_pid[i].i_windup) != mab::MD::Error_t::OK)
-            {
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Position PID parameters for drive with ID: %d",
-                            msg.device_ids[i]);
-            }
-            if (md->setProfileVelocity(msg.position_pid[i].max_output) != mab::MD::Error_t::OK)
-            {
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Profile Velocity for drive with ID: %d",
-                            msg.device_ids[i]);
-            }
+            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
+            continue;
+        }
 
-            if (i < (size_t)msg.velocity_pid.size())
+        if (md->setPositionPIDparam(msg.position_pid[i].kp,
+                                    msg.position_pid[i].ki,
+                                    msg.position_pid[i].kd,
+                                    msg.position_pid[i].i_windup) != mab::MD::Error_t::OK)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Position PID parameters for drive with ID: %d",
+                        msg.device_ids[i]);
+        }
+        if (md->setProfileVelocity(msg.position_pid[i].max_output) != mab::MD::Error_t::OK)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Profile Velocity for drive with ID: %d",
+                        msg.device_ids[i]);
+        }
+
+        if (i < (size_t)msg.velocity_pid.size())
+        {
+            if (md->setVelocityPIDparam(msg.velocity_pid[i].kp,
+                                        msg.velocity_pid[i].ki,
+                                        msg.velocity_pid[i].kd,
+                                        msg.velocity_pid[i].i_windup) != mab::MD::Error_t::OK)
             {
-                if (md->setVelocityPIDparam(msg.velocity_pid[i].kp,
-                                            msg.velocity_pid[i].ki,
-                                            msg.velocity_pid[i].kd,
-                                            msg.velocity_pid[i].i_windup) != mab::MD::Error_t::OK)
-                {
-                    RCLCPP_WARN(this->get_logger(),
-                                "Failed to set Velocity PID parameters for drive with ID: %d",
-                                msg.device_ids[i]);
-                }
-                if (md->setMaxTorque(msg.velocity_pid[i].max_output) != mab::MD::Error_t::OK)
-                {
-                    RCLCPP_WARN(this->get_logger(),
-                                "Failed to set Max Torque for drive with ID: %d",
-                                msg.device_ids[i]);
-                }
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Velocity PID parameters for drive with ID: %d",
+                            msg.device_ids[i]);
+            }
+            if (md->setMaxTorque(msg.velocity_pid[i].max_output) != mab::MD::Error_t::OK)
+            {
+                RCLCPP_WARN(this->get_logger(),
+                            "Failed to set Max Torque for drive with ID: %d",
+                            msg.device_ids[i]);
             }
         }
-        else
-            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
     }
     return;
 }
@@ -220,31 +219,28 @@ void MdNode::cbVelocityCmd(const candle_ros2::msg::VelocityPidCmd& msg)
 
     for (size_t i = 0; i < n; i++)
     {
-        auto md =
-            std::find_if(mds.begin(),
-                         mds.end(),
-                         [id = msg.device_ids[i]](const mab::MD& m) { return m.m_canId == id; });
-
-        if (md != mds.end())
+        auto md = findMd(mds, msg.device_ids[i]);
+        if (md == mds.end())
         {
-            if (md->setVelocityPIDparam(msg.velocity_pid[i].kp,
-                                        msg.velocity_pid[i].ki,
-                                        msg.velocity_pid[i].kd,
-                                        msg.velocity_pid[i].i_windup) != mab::MD::Error_t::OK)
-            {
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Velocity PID parameters for drive with ID: %d",
-                            msg.device_ids[i]);
-            }
-            if (md->setMaxTorque(msg.velocity_pid[i].max_output) != mab::MD::Error_t::OK)
-            {
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Max Torque for drive with ID: %d",
-                            msg.device_ids[i]);
-            }
-        }
-        else
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
+            continue;
+        }
+
+        if (md->setVelocityPIDparam(msg.velocity_pid[i].kp,
+                                    msg.velocity_pid[i].ki,
+                                    msg.velocity_pid[i].kd,
+                                    msg.velocity_pid[i].i_windup) != mab::MD::Error_t::OK)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Velocity PID parameters for drive with ID: %d",
+                        msg.device_ids[i]);
+        }
+        if (md->setMaxTorque(msg.velocity_pid[i].max_output) != mab::MD::Error_t::OK)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Max Torque for drive with ID: %d",
+                        msg.device_ids[i]);
+        }
     }
     return;
 }
@@ -263,28 +259,25 @@ void MdNode::cbImpedanceCmd(const candle_ros2::msg::ImpedanceCmd& msg)
 
     for (size_t i = 0; i < n; i++)
     {
-        auto md =
-            std::find_if(mds.begin(),
-                         mds.end(),
-                         [id = msg.device_ids[i]](const mab::MD& m) { return m.m_canId == id; });
-
-        if (md != mds.end())
+        auto md = findMd(mds, msg.device_ids[i]);
+        if (md == mds.end())
         {
-            if (md->setImpedanceParams(msg.kp[i], msg.kd[i]) != mab::MD::Error_t::OK)
-            {
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Impedance parameters for drive with ID: %d",
-                            msg.device_ids[i]);
-            }
-            if (md->setMaxTorque(msg.max_output[i]) != mab::MD::Error_t::OK)
-            {
-                RCLCPP_WARN(this->get_logger(),
-                            "Failed to set Max Torque for drive with ID: %d",
-                            msg.device_ids[i]);
-            }
-        }
-        else
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
+            continue;
+        }
+
+        if (md->setImpedanceParams(msg.kp[i], msg.kd[i]) != mab::MD::Error_t::OK)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Impedance parameters for drive with ID: %d",
+                        msg.device_ids[i]);
+        }
+        if (md->setMaxTorque(msg.max_output[i]) != mab::MD::Error_t::OK)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set Max Torque for drive with ID: %d",
+                        msg.device_ids[i]);
+        }
     }
     return;
 }
@@ -297,13 +290,14 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request
     for (auto id : req->device_ids)
     {
         mab::MD md(id, candle.get());
-        if (md.init() == mab::MD::Error_t::OK)
+        if (md.init() != mab::MD::Error_t::OK)
         {
-            mds.push_back(std::move(md));
-            rsp->success.push_back(true);
-        }
-        else
             rsp->success.push_back(false);
+            continue;
+        }
+
+        mds.push_back(std::move(md));
+        rsp->success.push_back(true);
     }
     rsp->total_devices = static_cast<u16>(mds.size());
     return;
@@ -316,16 +310,15 @@ void MdNode::cbZero(const std::shared_ptr<candle_ros2::srv::Generic::Request> re
 
     for (auto id : req->device_ids)
     {
-        auto md = std::find_if(
-            mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
-
-        if (md != mds.end())
+        auto md = findMd(mds, id);
+        if (md == mds.end())
         {
-            if (md->zero() == mab::MD::Error_t::OK)
-                rsp->success.push_back(true);
-            else
-                rsp->success.push_back(false);
+            rsp->success.push_back(false);
+            continue;
         }
+
+        if (md->zero() == mab::MD::Error_t::OK)
+            rsp->success.push_back(true);
         else
             rsp->success.push_back(false);
     }
@@ -368,18 +361,15 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request>
                         req->device_ids[i]);
         }
 
-        auto md =
-            std::find_if(mds.begin(),
-                         mds.end(),
-                         [id = req->device_ids[i]](const mab::MD& m) { return m.m_canId == id; });
-
-        if (md != mds.end())
+        auto md = findMd(mds, req->device_ids[i]);
+        if (md == mds.end())
         {
-            if (md->setMotionMode(mode) == mab::MD::Error_t::OK)
-                rsp->success.push_back(true);
-            else
-                rsp->success.push_back(false);
+            rsp->success.push_back(false);
+            continue;
         }
+
+        if (md->setMotionMode(mode) == mab::MD::Error_t::OK)
+            rsp->success.push_back(true);
         else
             rsp->success.push_back(false);
     }
@@ -393,16 +383,15 @@ void MdNode::cbEnable(const std::shared_ptr<candle_ros2::srv::Generic::Request> 
 
     for (auto id : req->device_ids)
     {
-        auto md = std::find_if(
-            mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
-
-        if (md != mds.end())
+        auto md = findMd(mds, id);
+        if (md == mds.end())
         {
-            if (md->enable() == mab::MD::Error_t::OK)
-                rsp->success.push_back(true);
-            else
-                rsp->success.push_back(false);
+            rsp->success.push_back(false);
+            continue;
         }
+
+        if (md->enable() == mab::MD::Error_t::OK)
+            rsp->success.push_back(true);
         else
             rsp->success.push_back(false);
     }
@@ -416,20 +405,24 @@ void MdNode::cbDisable(const std::shared_ptr<candle_ros2::srv::Generic::Request>
 
     for (auto id : req->device_ids)
     {
-        auto md = std::find_if(
-            mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
-
-        if (md != mds.end())
+        auto md = findMd(mds, id);
+        if (md == mds.end())
         {
-            if (md->disable() == mab::MD::Error_t::OK)
-                rsp->success.push_back(true);
-            else
-                rsp->success.push_back(false);
+            rsp->success.push_back(false);
+            continue;
         }
+
+        if (md->disable() == mab::MD::Error_t::OK)
+            rsp->success.push_back(true);
         else
             rsp->success.push_back(false);
     }
     return;
+}
+
+std::vector<mab::MD>::iterator MdNode::findMd(std::vector<mab::MD>& mds, u16 id)
+{
+    return std::find_if(mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
 }
 
 int main(int argc, char* argv[])

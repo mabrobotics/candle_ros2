@@ -22,7 +22,7 @@ MdNode::MdNode() : Node("candle_md_node")
     else
     {
         RCLCPP_INFO(this->get_logger(),
-                    "<data_rate> parameter not recognised! Value: '%s'",
+                    "<data_rate> parameter not recognized! Value: '%s'",
                     paramDataRate.c_str());
         return;
     }
@@ -34,7 +34,7 @@ MdNode::MdNode() : Node("candle_md_node")
     else
     {
         RCLCPP_INFO(
-            this->get_logger(), "<bus> parameter not recognised! Value: %s", paramBus.c_str());
+            this->get_logger(), "<bus> parameter not recognized! Value: %s", paramBus.c_str());
         return;
     }
 

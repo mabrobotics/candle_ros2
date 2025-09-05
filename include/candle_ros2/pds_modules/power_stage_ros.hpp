@@ -23,7 +23,7 @@ class PowerStageRos : public BaseModuleRos
                const int                     timerMs    = 1000) override;
 
   private:
-    static constexpr const char* MODULE_NAME = "power_stage";
+    static constexpr const char* MODULE_NAME = "ps";
 
     std::shared_ptr<mab::PowerStage> powerStage;
 

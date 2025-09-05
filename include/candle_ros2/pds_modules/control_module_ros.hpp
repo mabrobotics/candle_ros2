@@ -20,7 +20,7 @@ class ControlModuleRos : public BaseModuleRos
                const int                     timerMs    = 1000) override;
 
   private:
-    static constexpr const char* MODULE_NAME = "control";
+    static constexpr const char* MODULE_NAME = "ctrl";
 
     mab::Pds* controlModule{nullptr};
 

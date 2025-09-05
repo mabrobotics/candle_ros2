@@ -1,4 +1,4 @@
-# Candle ROS2 Software
+# CANdle-SDK ROS2 Software
 
 This repository provides two main nodes: one for controlling MD electric drive controllers and another for communicating with and controlling PDS devices.
 
@@ -34,15 +34,15 @@ After adding a PDS with a specified ID, this node automatically creates topics f
 
 **Example:** For PDS ID 100 with an *Isolated Converter* on socket 1:
 
-- `/pds/id_100/control`
-- `/pds/id_100/isolated_converter_1`
+- `/pds/id_100/ctrl`
+- `/pds/id_100/ic_1`
 
 The `control` module publishes data from the PDS control board.  
 
 For other modules, **enable** and **disable** services follow a similar convention:
 
-- `/pds/id_100/disable_isolated_converter_1`
-- `/pds/id_100/enable_isolated_converter_1`
+- `/pds/id_100/disable_ic_1`
+- `/pds/id_100/enable_ic_1`
 
 Other available services:
 

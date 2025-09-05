@@ -23,7 +23,7 @@ class BrakeResistorRos : public BaseModuleRos
                const int                     timerMs    = 1000) override;
 
   private:
-    static constexpr const char* MODULE_NAME = "brake_resistor";
+    static constexpr const char* MODULE_NAME = "br";
 
     std::shared_ptr<mab::BrakeResistor> brakeResistor;
 

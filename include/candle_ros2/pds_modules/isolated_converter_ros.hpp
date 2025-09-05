@@ -23,7 +23,7 @@ class IsolatedConverterRos : public BaseModuleRos
                const int                     timerMs    = 1000) override;
 
   private:
-    static constexpr const char* MODULE_NAME = "isolated_converter";
+    static constexpr const char* MODULE_NAME = "ic";
 
     std::shared_ptr<mab::IsolatedConv> isolatedConverter;
 

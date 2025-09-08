@@ -21,6 +21,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
@@ -63,7 +64,7 @@ add_subdirectory(CANdle-SDK EXCLUDE_FROM_ALL)
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)
 
-target_link_libraries(${md_node_name} ${cpp_typesupport_target} candle)
+target_link_libraries(${md_node_name} ${cpp_typesupport_target} candle rclcpp_components::component)
 target_include_directories(${md_node_name} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
@@ -76,7 +77,7 @@ ament_target_dependencies(
   "sensor_msgs"
 )
 
-target_link_libraries(${pds_node_name} ${cpp_typesupport_target} candle)
+target_link_libraries(${pds_node_name} ${cpp_typesupport_target} candle rclcpp_components::component)
 target_include_directories(${pds_node_name} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>

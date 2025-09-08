@@ -3,10 +3,10 @@
 
 #include "pds.hpp"
 
-class BaseModuleRos
+class I_BaseModuleRos
 {
   public:
-    virtual ~BaseModuleRos() = default;
+    virtual ~I_BaseModuleRos() = default;
 
     virtual bool setup(std::shared_ptr<rclcpp::Node> node,
                        mab::Pds&                     pds,
@@ -16,7 +16,7 @@ class BaseModuleRos
                        const int                     timerMs    = 1000) = 0;
 
   protected:
-    std::shared_ptr<rclcpp::Node> parentNode;
+    std::shared_ptr<rclcpp::Node> m_parentNode;
 
     rclcpp::TimerBase::SharedPtr tmrPub;
 };

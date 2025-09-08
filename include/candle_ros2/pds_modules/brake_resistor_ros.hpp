@@ -12,7 +12,7 @@
 /* CANdle-SDK */
 #include "pds.hpp"
 
-class BrakeResistorRos : public BaseModuleRos
+class BrakeResistorRos : public I_BaseModuleRos
 {
   public:
     bool setup(std::shared_ptr<rclcpp::Node> node,
@@ -25,7 +25,7 @@ class BrakeResistorRos : public BaseModuleRos
   private:
     static constexpr const char* MODULE_NAME = "br";
 
-    std::shared_ptr<mab::BrakeResistor> brakeResistor;
+    std::shared_ptr<mab::BrakeResistor> m_brakeResistor;
 
     rclcpp::Publisher<candle_ros2::msg::BrakeResistorData>::SharedPtr pubData;
 

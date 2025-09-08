@@ -7,30 +7,30 @@ bool IsolatedConverterRos::setup(std::shared_ptr<rclcpp::Node> node,
                                  const std::string&            nodePrefix,
                                  const int                     timerMs)
 {
-    parentNode = node;
+    m_parentNode = node;
 
-    isolatedConverter = pds.attachIsolatedConverter(socket);
-    if (isolatedConverter == nullptr)
+    m_isolatedConverter = pds.attachIsolatedConverter(socket);
+    if (m_isolatedConverter == nullptr)
         return false;
 
-    pubData = parentNode->create_publisher<candle_ros2::msg::IsolatedConverterData>(
+    pubData = m_parentNode->create_publisher<candle_ros2::msg::IsolatedConverterData>(
         nodePrefix + "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         10);
 
-    srvEnable = parentNode->create_service<candle_ros2::srv::GenericPds>(
+    srvEnable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
         nodePrefix + "id_" + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         std::bind(
             &IsolatedConverterRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
-    srvDisable = parentNode->create_service<candle_ros2::srv::GenericPds>(
+    srvDisable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
         nodePrefix + "id_" + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         std::bind(
             &IsolatedConverterRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
 
-    tmrPub = parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
-                                           std::bind(&IsolatedConverterRos::publishStatus, this));
+    tmrPub = m_parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
+                                             std::bind(&IsolatedConverterRos::publishStatus, this));
 
     return true;
 }
@@ -39,18 +39,18 @@ void IsolatedConverterRos::publishStatus()
 {
     auto msg = candle_ros2::msg::IsolatedConverterData();
 
-    msg.header.stamp = parentNode->get_clock()->now();
+    msg.header.stamp = m_parentNode->get_clock()->now();
 
-    isolatedConverter->getEnabled(msg.enabled);
-    isolatedConverter->getOutputVoltage(msg.output_voltage);
-    isolatedConverter->getLoadCurrent(msg.load_current);
+    m_isolatedConverter->getEnabled(msg.enabled);
+    m_isolatedConverter->getOutputVoltage(msg.output_voltage);
+    m_isolatedConverter->getLoadCurrent(msg.load_current);
     /* Power and energy reads are not implemented yet */
-    // isolatedConverter->getPower(msg.power);
-    // isolatedConverter->getEnergy(msg.energy);
-    isolatedConverter->getOcdLevel(msg.ocd_level);
-    isolatedConverter->getOcdDelay(msg.ocd_delay);
-    isolatedConverter->getTemperature(msg.temperature);
-    isolatedConverter->getTemperatureLimit(msg.temperature_limit);
+    // m_isolatedConverter->getPower(msg.power);
+    // m_isolatedConverter->getEnergy(msg.energy);
+    m_isolatedConverter->getOcdLevel(msg.ocd_level);
+    m_isolatedConverter->getOcdDelay(msg.ocd_delay);
+    m_isolatedConverter->getTemperature(msg.temperature);
+    m_isolatedConverter->getTemperatureLimit(msg.temperature_limit);
 
     pubData->publish(msg);
 }
@@ -59,7 +59,7 @@ void IsolatedConverterRos::cbEnable(
     const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
     std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
 {
-    if (isolatedConverter->enable() != mab::PdsModule::error_E::OK)
+    if (m_isolatedConverter->enable() != mab::PdsModule::error_E::OK)
         rsp->success.push_back(false);
     else
         rsp->success.push_back(true);
@@ -69,7 +69,7 @@ void IsolatedConverterRos::cbDisable(
     const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
     std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
 {
-    if (isolatedConverter->disable() != mab::PdsModule::error_E::OK)
+    if (m_isolatedConverter->disable() != mab::PdsModule::error_E::OK)
         rsp->success.push_back(false);
     else
         rsp->success.push_back(true);

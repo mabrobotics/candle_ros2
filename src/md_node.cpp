@@ -1,45 +1,12 @@
 #include "candle_ros2/md_node.hpp"
 
-MdNode::MdNode() : Node("candle_md_node")
+// MdNode::MdNode() : Node("candle_md_node")
+
+MdNode::MdNode(const rclcpp::NodeOptions&   options,
+               std::shared_ptr<mab::Candle> candle,
+               const candleParams_S&        params)
+    : Node("candle_md_node", options), m_candle(std::move(candle))
 {
-    this->declare_parameter<std::string>("data_rate", "1M");
-    this->declare_parameter<std::string>("bus", "USB");
-
-    auto dataRate = mab::CANdleDatarate_E::CAN_DATARATE_1M;
-    auto bus      = mab::candleTypes::busTypes_t::USB;
-
-    std::string paramDataRate = this->get_parameter("data_rate").as_string();
-    std::string paramBus      = this->get_parameter("bus").as_string();
-
-    if (paramDataRate == "1M")
-        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_1M;
-    else if (paramDataRate == "2M")
-        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_2M;
-    else if (paramDataRate == "5M")
-        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_5M;
-    else if (paramDataRate == "8M")
-        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_8M;
-    else
-    {
-        RCLCPP_INFO(this->get_logger(),
-                    "<data_rate> parameter not recognized! Value: '%s'",
-                    paramDataRate.c_str());
-        return;
-    }
-
-    if (paramBus == "SPI")
-        bus = mab::candleTypes::busTypes_t::SPI;
-    else if (paramBus == "USB")
-        bus = mab::candleTypes::busTypes_t::USB;
-    else
-    {
-        RCLCPP_INFO(
-            this->get_logger(), "<bus> parameter not recognized! Value: %s", paramBus.c_str());
-        return;
-    }
-
-    candle = std::unique_ptr<mab::Candle>(mab::attachCandle(dataRate, bus));
-
     pubJointState = this->create_publisher<sensor_msgs::msg::JointState>(
         std::string(NODE_PREFIX) + "joint_states", 10);
 
@@ -91,13 +58,13 @@ void MdNode::publishJointStates()
 {
     sensor_msgs::msg::JointState msgJointStates;
 
-    msgJointStates.name.reserve(mds.size());
-    msgJointStates.position.reserve(mds.size());
-    msgJointStates.velocity.reserve(mds.size());
-    msgJointStates.effort.reserve(mds.size());
+    msgJointStates.name.reserve(m_mds.size());
+    msgJointStates.position.reserve(m_mds.size());
+    msgJointStates.velocity.reserve(m_mds.size());
+    msgJointStates.effort.reserve(m_mds.size());
 
     msgJointStates.header.stamp = this->get_clock()->now();
-    for (auto& md : mds)
+    for (auto& md : m_mds)
     {
         msgJointStates.name.push_back(std::string("Joint " + std::to_string(md.m_canId)));
         msgJointStates.position.push_back(md.getPosition().first);
@@ -123,8 +90,8 @@ void MdNode::cbMotionCmd(const candle_ros2::msg::MotionCmd& msg)
 
     for (size_t i = 0; i < n; i++)
     {
-        auto md = findMd(mds, msg.device_ids[i]);
-        if (md == mds.end())
+        auto md = findMd(m_mds, msg.device_ids[i]);
+        if (md == m_mds.end())
         {
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
             continue;
@@ -160,8 +127,8 @@ void MdNode::cbPositionCmd(const candle_ros2::msg::PositionPidCmd& msg)
 
     for (size_t i = 0; i < n; i++)
     {
-        auto md = findMd(mds, msg.device_ids[i]);
-        if (md == mds.end())
+        auto md = findMd(m_mds, msg.device_ids[i]);
+        if (md == m_mds.end())
         {
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
             continue;
@@ -219,8 +186,8 @@ void MdNode::cbVelocityCmd(const candle_ros2::msg::VelocityPidCmd& msg)
 
     for (size_t i = 0; i < n; i++)
     {
-        auto md = findMd(mds, msg.device_ids[i]);
-        if (md == mds.end())
+        auto md = findMd(m_mds, msg.device_ids[i]);
+        if (md == m_mds.end())
         {
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
             continue;
@@ -259,8 +226,8 @@ void MdNode::cbImpedanceCmd(const candle_ros2::msg::ImpedanceCmd& msg)
 
     for (size_t i = 0; i < n; i++)
     {
-        auto md = findMd(mds, msg.device_ids[i]);
-        if (md == mds.end())
+        auto md = findMd(m_mds, msg.device_ids[i]);
+        if (md == m_mds.end())
         {
             RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", msg.device_ids[i]);
             continue;
@@ -289,17 +256,17 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request
 
     for (auto id : req->device_ids)
     {
-        mab::MD md(id, candle.get());
+        mab::MD md(id, m_candle.get());
         if (md.init() != mab::MD::Error_t::OK)
         {
             rsp->success.push_back(false);
             continue;
         }
 
-        mds.push_back(std::move(md));
+        m_mds.push_back(std::move(md));
         rsp->success.push_back(true);
     }
-    rsp->total_devices = static_cast<u16>(mds.size());
+    rsp->total_devices = static_cast<u16>(m_mds.size());
     return;
 }
 
@@ -310,8 +277,8 @@ void MdNode::cbZero(const std::shared_ptr<candle_ros2::srv::Generic::Request> re
 
     for (auto id : req->device_ids)
     {
-        auto md = findMd(mds, id);
-        if (md == mds.end())
+        auto md = findMd(m_mds, id);
+        if (md == m_mds.end())
         {
             rsp->success.push_back(false);
             continue;
@@ -361,8 +328,8 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request>
                         req->device_ids[i]);
         }
 
-        auto md = findMd(mds, req->device_ids[i]);
-        if (md == mds.end())
+        auto md = findMd(m_mds, req->device_ids[i]);
+        if (md == m_mds.end())
         {
             rsp->success.push_back(false);
             continue;
@@ -383,8 +350,8 @@ void MdNode::cbEnable(const std::shared_ptr<candle_ros2::srv::Generic::Request> 
 
     for (auto id : req->device_ids)
     {
-        auto md = findMd(mds, id);
-        if (md == mds.end())
+        auto md = findMd(m_mds, id);
+        if (md == m_mds.end())
         {
             rsp->success.push_back(false);
             continue;
@@ -405,8 +372,8 @@ void MdNode::cbDisable(const std::shared_ptr<candle_ros2::srv::Generic::Request>
 
     for (auto id : req->device_ids)
     {
-        auto md = findMd(mds, id);
-        if (md == mds.end())
+        auto md = findMd(m_mds, id);
+        if (md == m_mds.end())
         {
             rsp->success.push_back(false);
             continue;
@@ -425,10 +392,14 @@ std::vector<mab::MD>::iterator MdNode::findMd(std::vector<mab::MD>& mds, u16 id)
     return std::find_if(mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
 }
 
-int main(int argc, char* argv[])
-{
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<MdNode>());
-    rclcpp::shutdown();
-    return 0;
-}
+#include "rclcpp_components/register_node_macro.hpp"
+
+RCLCPP_COMPONENTS_REGISTER_NODE(MdNode)
+
+// int main(int argc, char* argv[])
+// {
+//     rclcpp::init(argc, argv);
+//     rclcpp::spin(std::make_shared<MdNode>());
+//     rclcpp::shutdown();
+//     return 0;
+// }

@@ -12,7 +12,7 @@
 /* CANdle-SDK */
 #include "pds.hpp"
 
-class IsolatedConverterRos : public BaseModuleRos
+class IsolatedConverterRos : public I_BaseModuleRos
 {
   public:
     bool setup(std::shared_ptr<rclcpp::Node> node,
@@ -25,7 +25,7 @@ class IsolatedConverterRos : public BaseModuleRos
   private:
     static constexpr const char* MODULE_NAME = "ic";
 
-    std::shared_ptr<mab::IsolatedConv> isolatedConverter;
+    std::shared_ptr<mab::IsolatedConv> m_isolatedConverter;
 
     rclcpp::Publisher<candle_ros2::msg::IsolatedConverterData>::SharedPtr pubData;
 

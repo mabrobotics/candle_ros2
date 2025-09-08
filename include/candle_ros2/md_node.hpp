@@ -18,15 +18,19 @@
 #include "candle.hpp"
 #include "MD.hpp"
 
+#include "candle_ros2/utils/candle_params.hpp"
+
 class MdNode : public rclcpp::Node
 {
   public:
-    MdNode();
+    MdNode(const rclcpp::NodeOptions&   options,
+           std::shared_ptr<mab::Candle> candle,
+           const candleParams_S&        params);
     ~MdNode();
 
   private:
-    std::unique_ptr<mab::Candle> candle;
-    std::vector<mab::MD>         mds;
+    std::shared_ptr<mab::Candle> m_candle;
+    std::vector<mab::MD>         m_mds;
 
     static constexpr const char* NODE_PREFIX = "md/";
 

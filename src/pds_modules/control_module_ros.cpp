@@ -7,18 +7,18 @@ bool ControlModuleRos::setup(std::shared_ptr<rclcpp::Node> node,
                              const std::string&            nodePrefix,
                              const int                     timerMs)
 {
-    parentNode    = node;
-    controlModule = &pds;
+    m_parentNode    = node;
+    m_controlModule = &pds;
     (void)socket;
 
-    if (controlModule == nullptr)
+    if (m_controlModule == nullptr)
         return false;
 
-    pubData = parentNode->create_publisher<candle_ros2::msg::ControlModuleData>(
+    pubData = m_parentNode->create_publisher<candle_ros2::msg::ControlModuleData>(
         nodePrefix + "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME), 10);
 
-    tmrPub = parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
-                                           std::bind(&ControlModuleRos::publishStatus, this));
+    tmrPub = m_parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
+                                             std::bind(&ControlModuleRos::publishStatus, this));
 
     return true;
 }
@@ -27,14 +27,14 @@ void ControlModuleRos::publishStatus()
 {
     auto msg = candle_ros2::msg::ControlModuleData();
 
-    msg.header.stamp = parentNode->get_clock()->now();
+    msg.header.stamp = m_parentNode->get_clock()->now();
 
-    controlModule->getBusVoltage(msg.bus_voltage);
-    controlModule->getBatteryVoltageLevels(msg.battery_voltage_level_1,
-                                           msg.battery_voltage_level_2);
-    controlModule->getBrakeResistorTriggerVoltage(msg.brake_trigger_voltage);
-    controlModule->getTemperature(msg.temperature);
-    controlModule->getTemperatureLimit(msg.temperature_limit);
+    m_controlModule->getBusVoltage(msg.bus_voltage);
+    m_controlModule->getBatteryVoltageLevels(msg.battery_voltage_level_1,
+                                             msg.battery_voltage_level_2);
+    m_controlModule->getBrakeResistorTriggerVoltage(msg.brake_trigger_voltage);
+    m_controlModule->getTemperature(msg.temperature);
+    m_controlModule->getTemperatureLimit(msg.temperature_limit);
 
     pubData->publish(msg);
 }

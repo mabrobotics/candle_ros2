@@ -1,43 +1,13 @@
 #include "candle_ros2/pds_node.hpp"
 
-PdsNode::PdsNode() : Node("candle_pds_node")
+#include "pds_node.hpp"
+#include "rclcpp_components/register_node_macro.hpp"
+
+PdsNode::PdsNode(const rclcpp::NodeOptions&   options,
+                 std::shared_ptr<mab::Candle> candle,
+                 const candleParams_S&        params)
+    : Node("candle_pds_node", options), m_candle(std::move(candle))
 {
-    this->declare_parameter<std::string>("data_rate", "1M");
-    this->declare_parameter<std::string>("bus", "USB");
-
-    auto dataRate = mab::CANdleDatarate_E::CAN_DATARATE_1M;
-    auto bus      = mab::candleTypes::busTypes_t::USB;
-
-    std::string paramDataRate = this->get_parameter("data_rate").as_string();
-    std::string paramBus      = this->get_parameter("bus").as_string();
-
-    if (paramDataRate == "1M")
-        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_1M;
-    else if (paramDataRate == "2M")
-        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_2M;
-    else if (paramDataRate == "5M")
-        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_5M;
-    else if (paramDataRate == "8M")
-        dataRate = mab::CANdleDatarate_E::CAN_DATARATE_8M;
-    else
-    {
-        RCLCPP_INFO(this->get_logger(),
-                    "<data_rate> parameter not recognised! Value: '%s'",
-                    paramDataRate.c_str());
-        return;
-    }
-
-    if (paramBus == "SPI")
-        bus = mab::candleTypes::busTypes_t::SPI;
-    else if (paramBus == "USB")
-        bus = mab::candleTypes::busTypes_t::USB;
-    else
-    {
-        RCLCPP_INFO(
-            this->get_logger(), "<bus> parameter not recognised! Value: %s", paramBus.c_str());
-        return;
-    }
-
     candle = std::unique_ptr<mab::Candle>(mab::attachCandle(dataRate, bus));
 
     srvAddPds = this->create_service<candle_ros2::srv::AddDevices>(
@@ -65,8 +35,8 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
     for (auto id : req->device_ids)
     {
-        auto instance = PdsInstance{};
-        instance.pds  = std::make_unique<mab::Pds>(id, candle.get());
+        auto instance = pdsInstance_S{};
+        instance.pds  = std::make_unique<mab::Pds>(id, m_candle.get());
         instance.pds->init();
 
         mab::Pds::modulesSet_S pdsModules = instance.pds->getModules();
@@ -112,7 +82,7 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
             }
         }
 
-        pds_list.emplace_back(std::move(instance));
+        m_pdsList.emplace_back(std::move(instance));
 
         RCLCPP_INFO(
             this->get_logger(), "PDS with id %d have the following set of connected modules:", id);
@@ -137,7 +107,7 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
         rsp->success.push_back(true);
     }
-    rsp->total_devices = static_cast<u16>(pds_list.size());
+    rsp->total_devices = static_cast<u16>(m_pdsList.size());
 }
 
 void PdsNode::cbReboot(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
@@ -147,16 +117,16 @@ void PdsNode::cbReboot(const std::shared_ptr<candle_ros2::srv::Generic::Request>
 
     for (auto id : req->device_ids)
     {
-        auto it = std::find_if(pds_list.begin(),
-                               pds_list.end(),
-                               [id](const PdsInstance& instance)
+        auto it = std::find_if(m_pdsList.begin(),
+                               m_pdsList.end(),
+                               [id](const pdsInstance_S& instance)
                                {
                                    if (!instance.pds)
                                        return false;
                                    return instance.pds->getCanId() == id;
                                });
 
-        if (it != pds_list.end())
+        if (it != m_pdsList.end())
         {
             if (it->pds->reboot() == mab::PdsModule::error_E::OK)
                 rsp->success.push_back(true);
@@ -177,21 +147,21 @@ void PdsNode::cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Reques
 
     for (auto id : req->device_ids)
     {
-        auto it = std::find_if(pds_list.begin(),
-                               pds_list.end(),
-                               [id](const PdsInstance& instance)
+        auto it = std::find_if(m_pdsList.begin(),
+                               m_pdsList.end(),
+                               [id](const pdsInstance_S& instance)
                                {
                                    if (!instance.pds)
                                        return false;
                                    return instance.pds->getCanId() == id;
                                });
 
-        if (it != pds_list.end())
+        if (it != m_pdsList.end())
         {
             if (it->pds->shutdown() == mab::PdsModule::error_E::OK)
             {
                 rsp->success.push_back(true);
-                pds_list.erase(it);
+                m_pdsList.erase(it);
             }
             else
                 rsp->success.push_back(false);
@@ -203,7 +173,7 @@ void PdsNode::cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Reques
     return;
 }
 
-std::unique_ptr<BaseModuleRos> PdsNode::createModule(mab::moduleType_E type)
+std::unique_ptr<I_BaseModuleRos> PdsNode::createModule(mab::moduleType_E type)
 {
     switch (type)
     {
@@ -222,10 +192,14 @@ std::unique_ptr<BaseModuleRos> PdsNode::createModule(mab::moduleType_E type)
     return nullptr;
 }
 
-int main(int argc, char* argv[])
-{
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<PdsNode>());
-    rclcpp::shutdown();
-    return 0;
-}
+#include "rclcpp_components/register_node_macro.hpp"
+
+RCLCPP_COMPONENTS_REGISTER_NODE(PdsNode)
+
+// int main(int argc, char* argv[])
+// {
+//     rclcpp::init(argc, argv);
+//     rclcpp::spin(std::make_shared<PdsNode>());
+//     rclcpp::shutdown();
+//     return 0;
+// }

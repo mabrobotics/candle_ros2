@@ -6,7 +6,7 @@
 #include "candle_ros2/srv/generic.hpp"
 
 /* PDS and modules objects container */
-#include "candle_ros2/pds/pds_instance.hpp"
+#include "candle_ros2/utils/pds_instance.hpp"
 
 /* PDS ROS2 modules */
 #include "candle_ros2/pds_modules/brake_resistor_ros.hpp"
@@ -21,12 +21,14 @@
 class PdsNode : public rclcpp::Node
 {
   public:
-    PdsNode();
+    PdsNode(const rclcpp::NodeOptions&   options,
+            std::shared_ptr<mab::Candle> candle,
+            const candleParams_S&        params);
     ~PdsNode();
 
   private:
-    std::unique_ptr<mab::Candle> candle;
-    std::vector<PdsInstance>     pds_list;
+    std::shared_ptr<mab::Candle> m_candle;
+    std::vector<pdsInstance_S>   m_pdsList;
 
     static constexpr const char* NODE_PREFIX  = "pds/";
     static constexpr int         PUB_TIMER_MS = 100;
@@ -44,5 +46,5 @@ class PdsNode : public rclcpp::Node
     void cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                     std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
 
-    std::unique_ptr<BaseModuleRos> createModule(mab::moduleType_E type);
+    std::unique_ptr<I_BaseModuleRos> createModule(mab::moduleType_E type);
 };

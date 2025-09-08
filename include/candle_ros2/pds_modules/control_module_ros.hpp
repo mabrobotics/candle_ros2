@@ -9,7 +9,7 @@
 /* CANdle-SDK */
 #include "pds.hpp"
 
-class ControlModuleRos : public BaseModuleRos
+class ControlModuleRos : public I_BaseModuleRos
 {
   public:
     bool setup(std::shared_ptr<rclcpp::Node> node,
@@ -22,7 +22,7 @@ class ControlModuleRos : public BaseModuleRos
   private:
     static constexpr const char* MODULE_NAME = "ctrl";
 
-    mab::Pds* controlModule{nullptr};
+    mab::Pds* m_controlModule{nullptr};
 
     rclcpp::Publisher<candle_ros2::msg::ControlModuleData>::SharedPtr pubData;
 

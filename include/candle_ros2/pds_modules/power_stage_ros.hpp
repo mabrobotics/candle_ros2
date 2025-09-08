@@ -12,7 +12,7 @@
 /* CANdle-SDK */
 #include "pds.hpp"
 
-class PowerStageRos : public BaseModuleRos
+class PowerStageRos : public I_BaseModuleRos
 {
   public:
     bool setup(std::shared_ptr<rclcpp::Node> node,
@@ -25,7 +25,7 @@ class PowerStageRos : public BaseModuleRos
   private:
     static constexpr const char* MODULE_NAME = "ps";
 
-    std::shared_ptr<mab::PowerStage> powerStage;
+    std::shared_ptr<mab::PowerStage> m_powerStage;
 
     rclcpp::Publisher<candle_ros2::msg::PowerStageData>::SharedPtr pubData;
 

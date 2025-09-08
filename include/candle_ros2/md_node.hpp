@@ -14,11 +14,11 @@
 #include "candle_ros2/srv/set_limits.hpp"
 #include "candle_ros2/srv/set_mode.hpp"
 
+#include "candle_ros2/utils/candle_params.hpp"
+
 /* CANdle-SDK */
 #include "candle.hpp"
 #include "MD.hpp"
-
-#include "candle_ros2/utils/candle_params.hpp"
 
 class MdNode : public rclcpp::Node
 {

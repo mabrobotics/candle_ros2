@@ -20,8 +20,8 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
@@ -53,45 +53,38 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
-file(GLOB_RECURSE sources "src/pds_modules/*.cpp")
-
-add_executable(${md_node_name} src/md_node.cpp)
-add_executable(${pds_node_name} src/pds_node.cpp ${sources})
-
 set(CMAKE_SKIP_INSTALL_RULES ON)
 add_subdirectory(CANdle-SDK EXCLUDE_FROM_ALL)
+set(CMAKE_SKIP_INSTALL_RULES OFF)
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)
 
-target_link_libraries(${md_node_name} ${cpp_typesupport_target} candle rclcpp_components::component)
-target_include_directories(${md_node_name} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
+file(GLOB_RECURSE pds_sources "src/pds_modules/*.cpp")
+
+add_library(${md_node_name} SHARED src/md_node.cpp)
+target_include_directories(${md_node_name} PUBLIC include)
+ament_target_dependencies(${md_node_name} rclcpp rclcpp_components sensor_msgs)
+target_link_libraries(${md_node_name} ${cpp_typesupport_target} candle)
 target_compile_features(${md_node_name} PUBLIC c_std_99 cxx_std_20)
+# rclcpp_components_register_nodes(${md_node_name} "MdNode")
 
-ament_target_dependencies(
-  ${md_node_name}
-  "rclcpp"
-  "sensor_msgs"
-)
-
-target_link_libraries(${pds_node_name} ${cpp_typesupport_target} candle rclcpp_components::component)
-target_include_directories(${pds_node_name} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
+add_library(${pds_node_name} SHARED src/pds_node.cpp ${pds_sources})
+target_include_directories(${pds_node_name} PUBLIC include)
+ament_target_dependencies(${pds_node_name} rclcpp rclcpp_components sensor_msgs)
+target_link_libraries(${pds_node_name} ${cpp_typesupport_target} candle)
 target_compile_features(${pds_node_name} PUBLIC c_std_99 cxx_std_20)
+# rclcpp_components_register_nodes(${pds_node_name} "PdsNode")
 
-ament_target_dependencies(
+add_executable(candle_container src/candle_container.cpp)
+ament_target_dependencies(candle_container rclcpp rclcpp_components)
+target_link_libraries(candle_container ${md_node_name} ${pds_node_name})
+
+
+install(TARGETS
+  ${md_node_name}
   ${pds_node_name}
-  "rclcpp"
-  "sensor_msgs"
-)
-
-set(CMAKE_SKIP_INSTALL_RULES OFF)
-install(TARGETS ${md_node_name} ${pds_node_name}
+  candle_container
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

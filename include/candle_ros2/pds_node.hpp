@@ -14,6 +14,8 @@
 #include "candle_ros2/pds_modules/isolated_converter_ros.hpp"
 #include "candle_ros2/pds_modules/power_stage_ros.hpp"
 
+#include "candle_ros2/utils/candle_params.hpp"
+
 /* CANdle-SDK */
 #include "candle.hpp"
 #include "pds.hpp"

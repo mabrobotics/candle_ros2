@@ -1,7 +1,5 @@
 #include "candle_ros2/md_node.hpp"
 
-// MdNode::MdNode() : Node("candle_md_node")
-
 MdNode::MdNode(const rclcpp::NodeOptions&   options,
                std::shared_ptr<mab::Candle> candle,
                const candleParams_S&        params)
@@ -391,15 +389,3 @@ std::vector<mab::MD>::iterator MdNode::findMd(std::vector<mab::MD>& mds, u16 id)
 {
     return std::find_if(mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
 }
-
-#include "rclcpp_components/register_node_macro.hpp"
-
-RCLCPP_COMPONENTS_REGISTER_NODE(MdNode)
-
-// int main(int argc, char* argv[])
-// {
-//     rclcpp::init(argc, argv);
-//     rclcpp::spin(std::make_shared<MdNode>());
-//     rclcpp::shutdown();
-//     return 0;
-// }

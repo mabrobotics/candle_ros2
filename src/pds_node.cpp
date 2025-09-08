@@ -1,15 +1,10 @@
 #include "candle_ros2/pds_node.hpp"
 
-#include "pds_node.hpp"
-#include "rclcpp_components/register_node_macro.hpp"
-
 PdsNode::PdsNode(const rclcpp::NodeOptions&   options,
                  std::shared_ptr<mab::Candle> candle,
                  const candleParams_S&        params)
     : Node("candle_pds_node", options), m_candle(std::move(candle))
 {
-    candle = std::unique_ptr<mab::Candle>(mab::attachCandle(dataRate, bus));
-
     srvAddPds = this->create_service<candle_ros2::srv::AddDevices>(
         std::string(NODE_PREFIX) + "add_pds",
         std::bind(&PdsNode::cbAddPds, this, std::placeholders::_1, std::placeholders::_2));
@@ -35,8 +30,9 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
     for (auto id : req->device_ids)
     {
-        auto instance = pdsInstance_S{};
-        instance.pds  = std::make_unique<mab::Pds>(id, m_candle.get());
+        pdsInstance_S instance = pdsInstance_S{};
+
+        instance.pds = std::make_unique<mab::Pds>(id, m_candle.get());
         instance.pds->init();
 
         mab::Pds::modulesSet_S pdsModules = instance.pds->getModules();
@@ -191,15 +187,3 @@ std::unique_ptr<I_BaseModuleRos> PdsNode::createModule(mab::moduleType_E type)
     }
     return nullptr;
 }
-
-#include "rclcpp_components/register_node_macro.hpp"
-
-RCLCPP_COMPONENTS_REGISTER_NODE(PdsNode)
-
-// int main(int argc, char* argv[])
-// {
-//     rclcpp::init(argc, argv);
-//     rclcpp::spin(std::make_shared<PdsNode>());
-//     rclcpp::shutdown();
-//     return 0;
-// }

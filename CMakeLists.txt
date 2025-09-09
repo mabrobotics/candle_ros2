@@ -94,16 +94,26 @@ endif()
 
 install(TARGETS
   candle_container
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(NOT CANDLE_ROS2_OMIT_MD)
-  install(TARGETS ${md_node_name} DESTINATION lib/${PROJECT_NAME})
+  install(TARGETS
+    ${md_node_name}
+    DESTINATION lib/${PROJECT_NAME}
+  )
 endif()
 
 if(NOT CANDLE_ROS2_OMIT_PDS)
-  install(TARGETS ${pds_node_name} DESTINATION lib/${PROJECT_NAME})
+  install(TARGETS
+    ${pds_node_name}
+    DESTINATION lib/${PROJECT_NAME}
+  )
 endif()
 
-install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY 
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 ament_package()

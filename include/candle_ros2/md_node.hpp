@@ -14,6 +14,7 @@
 #include "candle_ros2/srv/set_limits.hpp"
 #include "candle_ros2/srv/set_mode.hpp"
 
+/* Utils */
 #include "candle_ros2/utils/candle_params.hpp"
 
 /* CANdle-SDK */

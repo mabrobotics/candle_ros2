@@ -1,8 +1,12 @@
 #include "rclcpp/rclcpp.hpp"
-#include "candle_ros2/utils/candle_factory.hpp"
-#include "candle_ros2/utils/candle_params.hpp"
+
+/* Candle ROS2 Nodes */
 #include "candle_ros2/md_node.hpp"
 #include "candle_ros2/pds_node.hpp"
+
+/* Utils */
+#include "candle_ros2/utils/candle_factory.hpp"
+#include "candle_ros2/utils/candle_params.hpp"
 
 int main(int argc, char** argv)
 {

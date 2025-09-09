@@ -1,8 +1,11 @@
-// candle_factory.hpp
 #pragma once
 #include "rclcpp/rclcpp.hpp"
-#include "candle.hpp"
+
+/* Utils */
 #include "candle_ros2/utils/candle_params.hpp"
+
+/* CANdle-SDK */
+#include "candle.hpp"
 
 inline candleParams_S readParams(const rclcpp::Node::SharedPtr& node)
 {

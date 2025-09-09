@@ -326,7 +326,6 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request>
             mode = mab::MdMode_E::RAW_TORQUE;
         else
         {
-            mode = mab::MdMode_E::IDLE;
             RCLCPP_WARN(this->get_logger(),
                         "MODE %s not recognized, setting IDLE for drive with ID: %d",
                         reqMode.c_str(),

@@ -1,8 +1,9 @@
 #pragma once
-
-#include "pds.hpp"
+/* PDS ROS2 modules */
 #include "candle_ros2/pds_modules/base_module_ros.hpp"
 
+/* CANdle-SDK */
+#include "pds.hpp"
 struct pdsInstance_S
 {
     std::unique_ptr<mab::Pds>                     pds;

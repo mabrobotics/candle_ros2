@@ -5,16 +5,15 @@
 #include "candle_ros2/srv/add_devices.hpp"
 #include "candle_ros2/srv/generic.hpp"
 
-/* PDS and modules objects container */
-#include "candle_ros2/utils/pds_instance.hpp"
-
 /* PDS ROS2 modules */
 #include "candle_ros2/pds_modules/brake_resistor_ros.hpp"
 #include "candle_ros2/pds_modules/control_module_ros.hpp"
 #include "candle_ros2/pds_modules/isolated_converter_ros.hpp"
 #include "candle_ros2/pds_modules/power_stage_ros.hpp"
 
+/* Utils */
 #include "candle_ros2/utils/candle_params.hpp"
+#include "candle_ros2/utils/pds_instance.hpp"
 
 /* CANdle-SDK */
 #include "candle.hpp"

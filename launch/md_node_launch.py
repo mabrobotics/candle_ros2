@@ -9,7 +9,6 @@ def generate_launch_description():
             Node(
                 package="candle_ros2",
                 executable="candle_container",
-                name="candle_container",
                 output="screen",
                 parameters=[
                     {

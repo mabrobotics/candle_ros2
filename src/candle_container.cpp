@@ -22,15 +22,18 @@ int main(int argc, char** argv)
     rclcpp::executors::MultiThreadedExecutor exec;
     exec.add_node(config_node);
 
+    rclcpp::Node::SharedPtr md_node;
+    rclcpp::Node::SharedPtr pds_node;
+
     if (launch_md)
     {
-        auto md_node = std::make_shared<MdNode>(rclcpp::NodeOptions(), candle, params);
+        md_node = std::make_shared<MdNode>(rclcpp::NodeOptions(), candle, params);
         exec.add_node(md_node);
     }
 
     if (launch_pds)
     {
-        auto pds_node = std::make_shared<PdsNode>(rclcpp::NodeOptions(), candle, params);
+        pds_node = std::make_shared<PdsNode>(rclcpp::NodeOptions(), candle, params);
         exec.add_node(pds_node);
     }
 

@@ -12,6 +12,7 @@ class I_BaseModuleRos
                        mab::Pds&                     pds,
                        mab::socketIndex_E            socket,
                        const int                     pdsId,
+                       rclcpp::QoS&                  qos,
                        const std::string&            nodePrefix = "pds/",
                        const int                     timerMs    = 1000) = 0;
 

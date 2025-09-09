@@ -5,8 +5,14 @@ MdNode::MdNode(const rclcpp::NodeOptions&   options,
                const candleParams_S&        params)
     : Node("candle_md_node", options), m_candle(std::move(candle))
 {
+    rclcpp::QoS defaultQoS(10);
+    defaultQoS.reliable();
+
+    if (params.default_qos == "BestEffort")
+        defaultQoS.best_effort();
+
     pubJointState = this->create_publisher<sensor_msgs::msg::JointState>(
-        std::string(NODE_PREFIX) + "joint_states", 10);
+        std::string(NODE_PREFIX) + "joint_states", defaultQoS);
 
     subMotionCmd = this->create_subscription<candle_ros2::msg::MotionCmd>(
         std::string(NODE_PREFIX) + "motion_command",
@@ -41,7 +47,7 @@ MdNode::MdNode(const rclcpp::NodeOptions&   options,
         std::string(NODE_PREFIX) + "disable",
         std::bind(&MdNode::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 
-    tmrPub = this->create_wall_timer(std::chrono::milliseconds(100),
+    tmrPub = this->create_wall_timer(std::chrono::milliseconds(PUB_TIMER_MS),
                                      std::bind(&MdNode::publishJointStates, this));
 
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 MD node started.");

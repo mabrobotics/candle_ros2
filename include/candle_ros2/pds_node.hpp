@@ -33,7 +33,9 @@ class PdsNode : public rclcpp::Node
     std::vector<pdsInstance_S>   m_pdsList;
 
     static constexpr const char* NODE_PREFIX  = "pds/";
-    static constexpr int         PUB_TIMER_MS = 100;
+    static constexpr int         PUB_TIMER_MS = 100;  // 10 Hz
+
+    rclcpp::QoS m_defaultQoS;
 
     rclcpp::Service<candle_ros2::srv::AddDevices>::SharedPtr srvAddPds;
     rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr    srvReboot;

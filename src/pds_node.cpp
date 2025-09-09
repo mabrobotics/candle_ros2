@@ -3,8 +3,13 @@
 PdsNode::PdsNode(const rclcpp::NodeOptions&   options,
                  std::shared_ptr<mab::Candle> candle,
                  const candleParams_S&        params)
-    : Node("candle_pds_node", options), m_candle(std::move(candle))
+    : Node("candle_pds_node", options), m_candle(std::move(candle)), m_defaultQoS(10)
 {
+    m_defaultQoS.reliable();
+
+    if (params.default_qos == "BestEffort")
+        m_defaultQoS.best_effort();
+
     srvAddPds = this->create_service<candle_ros2::srv::AddDevices>(
         std::string(NODE_PREFIX) + "add_pds",
         std::bind(&PdsNode::cbAddPds, this, std::placeholders::_1, std::placeholders::_2));
@@ -57,6 +62,7 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
                         *instance.pds,
                         mab::socketIndex_E::UNASSIGNED,
                         id,
+                        m_defaultQoS,
                         NODE_PREFIX,
                         PUB_TIMER_MS))
             instance.modules.push_back(std::move(ctrl));
@@ -78,6 +84,7 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
                                *instance.pds,
                                static_cast<mab::socketIndex_E>(i + 1),
                                id,
+                               m_defaultQoS,
                                NODE_PREFIX,
                                PUB_TIMER_MS))
                     instance.modules.push_back(std::move(mod));

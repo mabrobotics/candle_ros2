@@ -4,6 +4,7 @@ bool IsolatedConverterRos::setup(std::shared_ptr<rclcpp::Node> node,
                                  mab::Pds&                     pds,
                                  mab::socketIndex_E            socket,
                                  const int                     pdsId,
+                                 rclcpp::QoS&                  qos,
                                  const std::string&            nodePrefix,
                                  const int                     timerMs)
 {
@@ -16,7 +17,7 @@ bool IsolatedConverterRos::setup(std::shared_ptr<rclcpp::Node> node,
     pubData = m_parentNode->create_publisher<candle_ros2::msg::IsolatedConverterData>(
         nodePrefix + "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
-        10);
+        qos);
 
     srvEnable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
         nodePrefix + "id_" + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +

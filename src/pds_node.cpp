@@ -33,7 +33,13 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
         pdsInstance_S instance = pdsInstance_S{};
 
         instance.pds = std::make_unique<mab::Pds>(id, m_candle.get());
-        instance.pds->init();
+
+        if (instance.pds->init() != mab::PdsModule::error_E::OK)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to init PDS with id %d", id);
+            rsp->success.push_back(false);
+            continue;
+        }
 
         mab::Pds::modulesSet_S pdsModules = instance.pds->getModules();
 

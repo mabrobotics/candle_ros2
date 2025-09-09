@@ -62,19 +62,17 @@ rosidl_get_typesupport_target(cpp_typesupport_target
 
 file(GLOB_RECURSE pds_sources "src/pds_modules/*.cpp")
 
-add_library(${md_node_name} SHARED src/md_node.cpp)
+add_library(${md_node_name} STATIC src/md_node.cpp)
 target_include_directories(${md_node_name} PUBLIC include)
 ament_target_dependencies(${md_node_name} rclcpp rclcpp_components sensor_msgs)
 target_link_libraries(${md_node_name} ${cpp_typesupport_target} candle)
 target_compile_features(${md_node_name} PUBLIC c_std_99 cxx_std_20)
-# rclcpp_components_register_nodes(${md_node_name} "MdNode")
 
-add_library(${pds_node_name} SHARED src/pds_node.cpp ${pds_sources})
+add_library(${pds_node_name} STATIC src/pds_node.cpp ${pds_sources})
 target_include_directories(${pds_node_name} PUBLIC include)
 ament_target_dependencies(${pds_node_name} rclcpp rclcpp_components sensor_msgs)
 target_link_libraries(${pds_node_name} ${cpp_typesupport_target} candle)
 target_compile_features(${pds_node_name} PUBLIC c_std_99 cxx_std_20)
-# rclcpp_components_register_nodes(${pds_node_name} "PdsNode")
 
 add_executable(candle_container src/candle_container.cpp)
 ament_target_dependencies(candle_container rclcpp rclcpp_components)
@@ -86,5 +84,7 @@ install(TARGETS
   ${pds_node_name}
   candle_container
   DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()

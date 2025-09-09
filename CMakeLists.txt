@@ -4,9 +4,6 @@ project(candle_ros2)
 set(md_node_name md_node)
 set(pds_node_name pds_node)
 
-option(CANDLE_ROS2_OMIT_MD "Do not build MD node library" OFF)
-option(CANDLE_ROS2_OMIT_PDS "Do not build PDS node library" OFF)
-
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -65,44 +62,28 @@ rosidl_get_typesupport_target(cpp_typesupport_target
 
 file(GLOB_RECURSE pds_sources "src/pds_modules/*.cpp")
 
-if(NOT CANDLE_ROS2_OMIT_MD)
-  add_library(${md_node_name} STATIC src/md_node.cpp)
-  target_include_directories(${md_node_name} PUBLIC include)
-  ament_target_dependencies(${md_node_name} rclcpp rclcpp_components sensor_msgs)
-  target_link_libraries(${md_node_name} ${cpp_typesupport_target} candle)
-  target_compile_features(${md_node_name} PUBLIC c_std_99 cxx_std_20)
-endif()
+add_library(${md_node_name} STATIC src/md_node.cpp)
+target_include_directories(${md_node_name} PUBLIC include)
+ament_target_dependencies(${md_node_name} rclcpp rclcpp_components sensor_msgs)
+target_link_libraries(${md_node_name} ${cpp_typesupport_target} candle)
+target_compile_features(${md_node_name} PUBLIC c_std_99 cxx_std_20)
 
-if(NOT CANDLE_ROS2_OMIT_PDS)
-  add_library(${pds_node_name} STATIC src/pds_node.cpp ${pds_sources})
-  target_include_directories(${pds_node_name} PUBLIC include)
-  ament_target_dependencies(${pds_node_name} rclcpp rclcpp_components sensor_msgs)
-  target_link_libraries(${pds_node_name} ${cpp_typesupport_target} candle)
-  target_compile_features(${pds_node_name} PUBLIC c_std_99 cxx_std_20)
-endif()
+add_library(${pds_node_name} STATIC src/pds_node.cpp ${pds_sources})
+target_include_directories(${pds_node_name} PUBLIC include)
+ament_target_dependencies(${pds_node_name} rclcpp rclcpp_components sensor_msgs)
+target_link_libraries(${pds_node_name} ${cpp_typesupport_target} candle)
+target_compile_features(${pds_node_name} PUBLIC c_std_99 cxx_std_20)
 
 add_executable(candle_container src/candle_container.cpp)
 ament_target_dependencies(candle_container rclcpp rclcpp_components)
+target_link_libraries(candle_container ${md_node_name} ${pds_node_name})
 
-if(NOT CANDLE_ROS2_OMIT_MD)
-  target_link_libraries(candle_container ${md_node_name})
-endif()
-
-if(NOT CANDLE_ROS2_OMIT_PDS)
-  target_link_libraries(candle_container ${pds_node_name})
-endif()
 
 install(TARGETS
+  ${md_node_name}
+  ${pds_node_name}
   candle_container
-)
-
-if(NOT CANDLE_ROS2_OMIT_MD)
-  install(TARGETS ${md_node_name} DESTINATION lib/${PROJECT_NAME})
-endif()
-
-if(NOT CANDLE_ROS2_OMIT_PDS)
-  install(TARGETS ${pds_node_name} DESTINATION lib/${PROJECT_NAME})
-endif()
+  DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 

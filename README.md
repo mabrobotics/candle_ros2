@@ -28,7 +28,17 @@ The node communicates via **services** for setup and **topics** for regular data
 
 ## PDS ROS2 Node
 
-After adding a PDS with a specified ID, this node automatically creates topics for all its modules. Topic naming convention:
+This node is also designed as an operational endpoint to control PDS modules and get data about all modules states. It **does not configure the PDS device**.
+
+### Services and Topics
+
+Available services are:
+
+- `/pds/add_pds`
+- `/pds/reboot_pds`
+- `/pds/shutdown_pds`
+
+After adding a PDS with a specified ID, this node automatically creates topics and services for all its modules. Topic naming convention:
 
 - /pds/id_**\<id\>**/**\<module_name\>**_**\<socket_number\>**
 
@@ -37,17 +47,12 @@ After adding a PDS with a specified ID, this node automatically creates topics f
 - `/pds/id_100/ctrl`
 - `/pds/id_100/ic_1`
 
-The `control` module publishes data from the PDS control board.  
+There always will be `ctrl` module beacause it's the PDS control board. For more information about every module topic read this page: [PDS Modules Topics](docs/PdsModule.md)  
 
-For other modules, **enable** and **disable** services follow a similar convention:
+Every module has **enable** and **disable** services, which follow a similar naming convention:
 
 - `/pds/id_100/disable_ic_1`
 - `/pds/id_100/enable_ic_1`
-
-Other available services:
-
-- `/pds/reboot_pds`
-- `/pds/shutdown_pds`
 
 ## Build
 

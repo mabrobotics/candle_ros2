@@ -1,0 +1,4 @@
+uint16[] device_ids
+string[] mode
+---
+bool[] success

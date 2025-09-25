@@ -1,28 +1,87 @@
-# MD80 ROS2 Node
+# CANdle-SDK ROS2 Software
 
-This node handles the communication between MAB's MD80 drives in ROS2 environment. The node was designed to act as 
-operational endpoint - to control the drives and get information from them, thus it is not capable of configuring the drives, 
-for this use [MDtool](https://github.com/mabrobotics/mdtool).
+This repository provides two main nodes: one for controlling MD electric drive controllers and another for communicating with and controlling PDS devices.
 
-## Principles of operation
+## MD ROS2 Node
 
-The node normally communicates via services for setup, and via topics for regular data transfers.
-Services are: 
-- /add_md80s
-- /zero_md80s
-- /set_mode_md80s
-- /enable_md80s
-- /disable_md80s
+This node manages communication between MAB's MD drive controllers in a ROS2 environment. It is designed as an **operational endpoint** to control drives and retrieve information. It **does not configure drives**; for configuration, use [CANdleTool](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/software_package/CANdleSDK/CANdleTool.html).
 
-Topics subscribed by the node are:
-- /md80/motion_command
-- /md80/impedance_command
-- /md80/velocity_pid_command
-- /md80/position_pid_command
+### Services and Topics
 
-Topic published by the node is:
-- /md80/joint_states
+The node communicates via **services** for setup and **topics** for regular data transfer.  
+
+**Services:**
+- `/md/add_mds`
+- `/md/disable`
+- `/md/enable`
+- `/md/set_mode`
+- `/md/zero`
+
+**Subscribed topics:**
+- `/md/motion_command`
+- `/md/position_command`
+- `/md/velocity_command`
+- `/md/impedance_command`
+
+**Published topic:**
+- `/md/joint_states`
+
+## PDS ROS2 Node
+
+This node is also designed as an operational endpoint to control PDS modules and get data about all modules states. It **does not configure the PDS device**.
+
+### Services and Topics
+
+Available services are:
+
+- `/pds/add_pds`
+- `/pds/reboot_pds`
+- `/pds/shutdown_pds`
+
+After adding a PDS with a specified ID, this node automatically creates topics and services for all its modules. Topic naming convention:
+
+- /pds/id_**\<id\>**/**\<module_name\>**_**\<socket_number\>**
+
+**Example:** For PDS ID 100 with an *Isolated Converter* on socket 1:
+
+- `/pds/id_100/ctrl`
+- `/pds/id_100/ic_1`
+
+There always will be `ctrl` module beacause it's the PDS control board. For more information about every module topic read this page: [PDS Modules Topics](docs/PdsModule.md)  
+
+Every module has **enable** and **disable** services, which follow a similar naming convention:
+
+- `/pds/id_100/disable_ic_1`
+- `/pds/id_100/enable_ic_1`
+
+## Build
+
+Clone the [repository](https://github.com/mabrobotics/candle_ros2) into the `src/` directory of your ROS2 workspace:
+
+```bash
+git clone <repo_url> src/candle_ros2
+```
+Initialize submodules:
+
+```bash
+git submodule update --init --recursive
+```
+
+Build the workspace:
+
+```bash
+colcon build
+```
+
+Source the environment:
+
+```bash
+source install/setup.bash
+```
+
+And you are ready to run the nodes.
+
 
 ## Quick startup guide
 
-Please find a detailed startup guide in the [MD80 x CANdle manual](https://www.mabrobotics.pl/servos)
+For detailed instructions, see the [MD x CANdle manual](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/intro.html)

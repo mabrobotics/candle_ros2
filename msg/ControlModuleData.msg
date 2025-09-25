@@ -1,0 +1,7 @@
+std_msgs/Header header
+uint32 bus_voltage
+uint32 battery_voltage_level_1
+uint32 battery_voltage_level_2
+uint32 brake_trigger_voltage
+float32 temperature
+float32 temperature_limit

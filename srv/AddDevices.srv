@@ -1,0 +1,4 @@
+uint16[] device_ids
+---
+bool[] success
+uint16 total_devices

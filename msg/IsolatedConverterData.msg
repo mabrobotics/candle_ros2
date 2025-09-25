@@ -1,0 +1,10 @@
+std_msgs/Header header
+bool enabled
+uint32 output_voltage
+int32 load_current
+int32 power
+int32 energy
+uint32 ocd_level
+uint32 ocd_delay
+float32 temperature
+float32 temperature_limit

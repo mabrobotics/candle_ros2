@@ -56,15 +56,15 @@ Every module has **enable** and **disable** services, which follow a similar nam
 
 ## Build
 
-Clone the [repository](https://github.com/mabrobotics/candle_ros2) into the `src/` directory of your ROS2 workspace:
+Go to your ROS2 workspace directory. Clone the [repository](https://github.com/mabrobotics/candle_ros2) into the `src/` directory of the workspace:
 
 ```bash
-git clone <repo_url> src/candle_ros2
+git clone git@github.com:mabrobotics/candle_ros2.git src/candle_ros2
 ```
 Initialize submodules:
 
 ```bash
-git submodule update --init --recursive
+git -C src/candle_ros2/ submodule update --init --recursive
 ```
 
 Build the workspace:

@@ -4,7 +4,7 @@ This repository provides two main nodes: one for controlling MD electric drive c
 
 ## MD ROS2 Node
 
-This node manages communication between MAB's MD drive controllers in a ROS2 environment. It is designed as an **operational endpoint** to control drives and retrieve information. It **does not configure drives**; for configuration, use [CANdleTool](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/software_package/CANdleSDK/CANdleTool.html).
+This node manages communication between MAB's MD drive controllers in a ROS2 environment. It is designed as an **operational endpoint** to control drives and retrieve information. It **does not configure drives**; for configuration, use [CANdleTool](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/CANdle-SDK/CANdleTool.html).
 
 ### Services and Topics
 
@@ -82,6 +82,6 @@ source install/setup.bash
 And you are ready to run the nodes.
 
 
-## Quick startup guide
+## Documentation
 
 For detailed instructions, see the [MD x CANdle manual](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/intro.html)

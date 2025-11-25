@@ -1,12 +1,12 @@
-# CANdle-SDK ROS2
+# CANdle ROS2
 
-This repository provides ROS2 interfaces for controlling **MD electric drive controllers** and **PDS power distribution systems** using the CANdle-SDK.
+This repository provides ROS2 interfaces for controlling **MD electric drive controllers** and **PDS power distribution systems** using the [CANdle-SDK](https://github.com/mabrobotics/CANdle-SDK).
 It exposes both systems as ROS2 nodes with services and topics for operational control and telemetry.
 
 This package acts as a **runtime control interface**.
 For configuration, please use:
 
-➡️ [CANdleTool documentation](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/CANdle-SDK/CANdleTool.html)
+➡️ [CANdleTool](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/CANdle-SDK/CANdleTool.html)
 
 ## Features
 

@@ -53,9 +53,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
-set(CMAKE_SKIP_INSTALL_RULES ON)
+set(CANDLESDK_BUILD_CANDLETOOL OFF CACHE BOOL "Disable candletool build" FORCE)
+set(CANDLESDK_BUILD_EXAMPLES OFF CACHE BOOL "Disable examples build" FORCE)
 add_subdirectory(CANdle-SDK EXCLUDE_FROM_ALL)
-set(CMAKE_SKIP_INSTALL_RULES OFF)
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)

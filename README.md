@@ -1,73 +1,40 @@
-# CANdle-SDK ROS2 Software
+# CANdle ROS2
 
-This repository provides two main nodes: one for controlling MD electric drive controllers and another for communicating with and controlling PDS devices.
+This repository provides ROS2 interfaces for controlling **MD electric drive controllers** and **PDS power distribution systems** using the [CANdle-SDK](https://github.com/mabrobotics/CANdle-SDK).
+It exposes both systems as ROS2 nodes with services and topics for operational control and telemetry.
 
-## MD ROS2 Node
+This package acts as a **runtime control interface**.
+For configuration, please use:
 
-This node manages communication between MAB's MD drive controllers in a ROS2 environment. It is designed as an **operational endpoint** to control drives and retrieve information. It **does not configure drives**; for configuration, use [CANdleTool](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/software_package/CANdleSDK/CANdleTool.html).
+➡️ [CANdleTool](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/CANdle-SDK/CANdleTool.html)
 
-### Services and Topics
+## Features
 
-The node communicates via **services** for setup and **topics** for regular data transfer.  
+### MD Node
+- Control MD drive controllers
+- Publish joint state data
+- Accept position, velocity, motion, and impedance commands
+- Provide enable/disable/zero/mode setup services
 
-**Services:**
-- `/md/add_mds`
-- `/md/disable`
-- `/md/enable`
-- `/md/set_mode`
-- `/md/zero`
+### PDS Node
+- Manage PDS devices and their modules
+- Monitor modules such as the Control Board, Isolated Converter, Brake Resistor, and Power Stage
 
-**Subscribed topics:**
-- `/md/motion_command`
-- `/md/position_command`
-- `/md/velocity_command`
-- `/md/impedance_command`
+## Installation
 
-**Published topic:**
-- `/md/joint_states`
-
-## PDS ROS2 Node
-
-This node is also designed as an operational endpoint to control PDS modules and get data about all modules states. It **does not configure the PDS device**.
-
-### Services and Topics
-
-Available services are:
-
-- `/pds/add_pds`
-- `/pds/reboot_pds`
-- `/pds/shutdown_pds`
-
-After adding a PDS with a specified ID, this node automatically creates topics and services for all its modules. Topic naming convention:
-
-- /pds/id_**\<id\>**/**\<module_name\>**_**\<socket_number\>**
-
-**Example:** For PDS ID 100 with an *Isolated Converter* on socket 1:
-
-- `/pds/id_100/ctrl`
-- `/pds/id_100/ic_1`
-
-There always will be `ctrl` module beacause it's the PDS control board. For more information about every module topic read this page: [PDS Modules Topics](docs/PdsModule.md)  
-
-Every module has **enable** and **disable** services, which follow a similar naming convention:
-
-- `/pds/id_100/disable_ic_1`
-- `/pds/id_100/enable_ic_1`
-
-## Build
-
-Clone the [repository](https://github.com/mabrobotics/candle_ros2) into the `src/` directory of your ROS2 workspace:
+Go to your ROS2 workspace and clone the repository:
 
 ```bash
-git clone <repo_url> src/candle_ros2
+git clone git@github.com:mabrobotics/candle_ros2.git src/candle_ros2
 ```
+
 Initialize submodules:
 
 ```bash
-git submodule update --init --recursive
+git -C src/candle_ros2/ submodule update --init --recursive
 ```
 
-Build the workspace:
+Build:
 
 ```bash
 colcon build
@@ -79,9 +46,27 @@ Source the environment:
 source install/setup.bash
 ```
 
-And you are ready to run the nodes.
+## Running
 
+### MD Node
+```bash
+ros2 launch candle_ros2 md_node_launch.py
+```
 
-## Quick startup guide
+### PDS Node
+```bash
+ros2 launch candle_ros2 pds_node_launch.py
+```
 
-For detailed instructions, see the [MD x CANdle manual](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/intro.html)
+### Both Nodes
+```bash
+ros2 launch candle_ros2 both_launch.py
+```
+
+## Documentation
+
+Full CANdle ROS2 documentation:
+➡️ [CANdle ROS2 nodes documentation](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/CANdle_ROS2/intro.html)
+
+MAB controllers manuals:
+➡️ [MAB documentation](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/intro.html)

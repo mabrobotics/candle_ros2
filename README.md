@@ -2,7 +2,7 @@
 
 This node handles the communication between MAB's MD80 drives in ROS2 environment. The node was designed to act as 
 operational endpoint - to control the drives and get information from them, thus it is not capable of configuring the drives, 
-for this use [MDtool](https://github.com/mabrobotics/mdtool).
+for this use [MDtool](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/candlelib/software_package/legacy/MDTOOL.html#mdtool).
 
 ## Principles of operation
 
@@ -25,4 +25,4 @@ Topic published by the node is:
 
 ## Quick startup guide
 
-Please find a detailed startup guide in the [MD80 x CANdle manual](https://www.mabrobotics.pl/servos)
+Please find a detailed startup guide in the [[LEGACY] candle ROS2 documentation](https://mabrobotics.github.io/MD80-x-CANdle-Documentation/candlelib/software_package/legacy/quick_startup_ros2.html#quick-start-ros2)

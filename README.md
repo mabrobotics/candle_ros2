@@ -63,6 +63,16 @@ ros2 launch candle_ros2 pds_node_launch.py
 ros2 launch candle_ros2 both_launch.py
 ```
 
+### Launch arguments
+
+- `bus` — desired communication bus with CANdle device, possible values: `USB` and `SPI` (default: `USB`).
+- `data_rate` — data rate of CAN network, possible values: `1M`, `2M`, `5M` and `8M` (default: `1M`).
+
+Example launch command with custom arguments:
+```bash
+ros2 launch candle_ros2 md_node_launch.py bus:=SPI data_rate:=5M
+```
+
 ## Documentation
 
 Full CANdle ROS2 documentation:

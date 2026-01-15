@@ -1,4 +1,6 @@
-uint16[] device_ids
-string[] mode
+# Service sets motion mode for MD devices
+
+uint16[] device_ids # Device IDs
+string[] mode       # Mode for each device: "IMPEDANCE", "POSITION_PID", "VELOCITY_PID", "RAW_TORQUE"
 ---
-bool[] success
+bool[] success      # Success status for each device

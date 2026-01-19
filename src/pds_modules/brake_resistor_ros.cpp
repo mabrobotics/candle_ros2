@@ -50,6 +50,7 @@ void BrakeResistorRos::publishStatus()
 void BrakeResistorRos::cbEnable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
                                 std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
 {
+    (void)req;
     if (m_brakeResistor->enable() != mab::PdsModule::error_E::OK)
         rsp->success.push_back(false);
     else
@@ -59,6 +60,7 @@ void BrakeResistorRos::cbEnable(const std::shared_ptr<candle_ros2::srv::GenericP
 void BrakeResistorRos::cbDisable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
                                  std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
 {
+    (void)req;
     if (m_brakeResistor->disable() != mab::PdsModule::error_E::OK)
         rsp->success.push_back(false);
     else

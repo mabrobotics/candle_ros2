@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10...4.1)
 project(candle_ros2)
 
 set(md_node_name md_node)

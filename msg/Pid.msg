@@ -1,3 +1,5 @@
+# Message holds PID controller parameters
+
 float32 kp
 float32 ki
 float32 kd

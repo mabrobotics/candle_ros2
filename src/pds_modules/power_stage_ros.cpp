@@ -64,6 +64,7 @@ void PowerStageRos::publishStatus()
 void PowerStageRos::cbEnable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
                              std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
 {
+    (void)req;
     if (m_powerStage->enable() != mab::PdsModule::error_E::OK)
         rsp->success.push_back(false);
     else
@@ -73,6 +74,7 @@ void PowerStageRos::cbEnable(const std::shared_ptr<candle_ros2::srv::GenericPds:
 void PowerStageRos::cbDisable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
                               std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
 {
+    (void)req;
     if (m_powerStage->disable() != mab::PdsModule::error_E::OK)
         rsp->success.push_back(false);
     else

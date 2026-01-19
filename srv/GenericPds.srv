@@ -1,3 +1,4 @@
+# Generic MAB Candle ROS2 service for PDS devices
 
 ---
-bool[] success
+bool[] success      # Success status for each device

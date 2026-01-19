@@ -1,5 +1,7 @@
-uint16[] device_ids
-float32[] velocity_limit
-float32[] torque_limit
+# Service sets limits for MD devices
+
+uint16[] device_ids         # Device IDs
+float32[] velocity_limit    # Velocity limit for each device [rad/s]
+float32[] torque_limit      # Torque limit for each device [Nm]
 ---
-bool[] success
+bool[] success              # Success status for each device

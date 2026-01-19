@@ -60,6 +60,7 @@ void IsolatedConverterRos::cbEnable(
     const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
     std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
 {
+    (void)req;
     if (m_isolatedConverter->enable() != mab::PdsModule::error_E::OK)
         rsp->success.push_back(false);
     else
@@ -70,6 +71,7 @@ void IsolatedConverterRos::cbDisable(
     const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
     std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
 {
+    (void)req;
     if (m_isolatedConverter->disable() != mab::PdsModule::error_E::OK)
         rsp->success.push_back(false);
     else

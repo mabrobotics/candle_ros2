@@ -67,6 +67,7 @@ ros2 launch candle_ros2 both_launch.py
 
 - `bus` — desired communication bus with CANdle device, possible values: `USB` and `SPI` (default: `USB`).
 - `data_rate` — data rate of CAN network, possible values: `1M`, `2M`, `5M` and `8M` (default: `1M`).
+- `default_qos` — ROS message quality of service for node's publishers, possible values: `Reliable` and `BestEffort` (default: `Reliable`).
 
 Example launch command with custom arguments:
 ```bash

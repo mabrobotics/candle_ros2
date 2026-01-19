@@ -3,7 +3,7 @@
 
 struct candleParams_S
 {
-    std::string data_rate;
     std::string bus;
+    std::string data_rate;
     std::string default_qos;
 };

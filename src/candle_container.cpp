@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     candleParams_S params = readParams(config_node);
     auto           candle = createCandle(params);
 
-    rclcpp::executors::MultiThreadedExecutor exec;
+    rclcpp::executors::SingleThreadedExecutor exec;
     exec.add_node(config_node);
 
     rclcpp::Node::SharedPtr md_node;

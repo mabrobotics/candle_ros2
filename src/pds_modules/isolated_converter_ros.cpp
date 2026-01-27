@@ -28,7 +28,7 @@ bool IsolatedConverterRos::setup(std::shared_ptr<rclcpp::Node> node,
         nodePrefix + "id_" + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         std::bind(
-            &IsolatedConverterRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
+            &IsolatedConverterRos::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 
     tmrPub = m_parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
                                              std::bind(&IsolatedConverterRos::publishStatus, this));

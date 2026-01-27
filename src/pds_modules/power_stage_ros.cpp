@@ -27,7 +27,7 @@ bool PowerStageRos::setup(std::shared_ptr<rclcpp::Node> node,
     srvDisable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
         nodePrefix + "id_" + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
-        std::bind(&PowerStageRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
+        std::bind(&PowerStageRos::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 
     tmrPub = m_parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
                                              std::bind(&PowerStageRos::publishStatus, this));

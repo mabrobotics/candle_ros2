@@ -3,7 +3,7 @@
 PdsNode::PdsNode(const rclcpp::NodeOptions&   options,
                  std::shared_ptr<mab::Candle> candle,
                  const candleParams_S&        params)
-    : Node("candle_pds_node", options), m_candle(std::move(candle)), m_defaultQoS(10)
+    : Node("candle_pds_node", options), m_candle(candle), m_defaultQoS(10)
 {
     m_defaultQoS.reliable();
 

@@ -87,4 +87,9 @@ install(TARGETS
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
+install(PROGRAMS
+  src/motor_control_v1.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME CandleTeleopNode
+)
 ament_package()

@@ -24,7 +24,8 @@
 class MdNode : public rclcpp::Node
 {
   public:
-    MdNode(const rclcpp::NodeOptions&   options,
+    MdNode(const std::string&           ns,
+           const rclcpp::NodeOptions&   options,
            std::shared_ptr<mab::Candle> candle,
            const candleParams_S&        params);
     ~MdNode();
@@ -33,8 +34,7 @@ class MdNode : public rclcpp::Node
     std::shared_ptr<mab::Candle> m_candle;
     std::vector<mab::MD>         m_mds;
 
-    static constexpr const char* NODE_PREFIX  = "md/";
-    static constexpr int         PUB_TIMER_MS = 5;  // 200 Hz
+    static constexpr int PUB_TIMER_MS = 5;  // 200 Hz
 
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pubJointState;
 

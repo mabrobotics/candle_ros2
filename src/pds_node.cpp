@@ -1,9 +1,10 @@
 #include "candle_ros2/pds_node.hpp"
 
-PdsNode::PdsNode(const rclcpp::NodeOptions&   options,
+PdsNode::PdsNode(const std::string&           ns,
+                 const rclcpp::NodeOptions&   options,
                  std::shared_ptr<mab::Candle> candle,
                  const candleParams_S&        params)
-    : Node("candle_pds_node", options), m_candle(candle), m_defaultQoS(10)
+    : Node("candle_pds_node", ns, options), m_candle(candle), m_defaultQoS(10)
 {
     m_defaultQoS.reliable();
 
@@ -11,13 +12,13 @@ PdsNode::PdsNode(const rclcpp::NodeOptions&   options,
         m_defaultQoS.best_effort();
 
     srvAddPds = this->create_service<candle_ros2::srv::AddDevices>(
-        std::string(NODE_PREFIX) + "add_pds",
+        "add_pds",
         std::bind(&PdsNode::cbAddPds, this, std::placeholders::_1, std::placeholders::_2));
     srvReboot = this->create_service<candle_ros2::srv::Generic>(
-        std::string(NODE_PREFIX) + "reboot_pds",
+        "reboot_pds",
         std::bind(&PdsNode::cbReboot, this, std::placeholders::_1, std::placeholders::_2));
     srvShutdown = this->create_service<candle_ros2::srv::Generic>(
-        std::string(NODE_PREFIX) + "shutdown_pds",
+        "shutdown_pds",
         std::bind(&PdsNode::cbShutdown, this, std::placeholders::_1, std::placeholders::_2));
 
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 PDS node started.");
@@ -63,7 +64,6 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
                         mab::socketIndex_E::UNASSIGNED,
                         id,
                         m_defaultQoS,
-                        NODE_PREFIX,
                         PUB_TIMER_MS))
             instance.modules.push_back(std::move(ctrl));
         else
@@ -85,7 +85,6 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
                                static_cast<mab::socketIndex_E>(i + 1),
                                id,
                                m_defaultQoS,
-                               NODE_PREFIX,
                                PUB_TIMER_MS))
                     instance.modules.push_back(std::move(mod));
             }

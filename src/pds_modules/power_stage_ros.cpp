@@ -5,7 +5,6 @@ bool PowerStageRos::setup(std::shared_ptr<rclcpp::Node> node,
                           mab::socketIndex_E            socket,
                           const int                     pdsId,
                           rclcpp::QoS&                  qos,
-                          const std::string&            nodePrefix,
                           const int                     timerMs)
 {
     m_parentNode = node;
@@ -15,17 +14,17 @@ bool PowerStageRos::setup(std::shared_ptr<rclcpp::Node> node,
         return false;
 
     pubData = m_parentNode->create_publisher<candle_ros2::msg::PowerStageData>(
-        nodePrefix + "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
+        "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         qos);
 
     srvEnable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
-        nodePrefix + "id_" + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +
+        "id_" + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         std::bind(&PowerStageRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
 
     srvDisable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
-        nodePrefix + "id_" + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
+        "id_" + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
             std::to_string(static_cast<int>(socket)),
         std::bind(&PowerStageRos::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 

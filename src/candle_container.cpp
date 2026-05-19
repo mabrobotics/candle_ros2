@@ -26,18 +26,21 @@ int main(int argc, char** argv)
     rclcpp::executors::SingleThreadedExecutor exec;
     exec.add_node(config_node);
 
+    const std::string md_ns  = "md";
+    const std::string pds_ns = "pds";
+
     rclcpp::Node::SharedPtr md_node;
     rclcpp::Node::SharedPtr pds_node;
 
     if (launch_md)
     {
-        md_node = std::make_shared<MdNode>(rclcpp::NodeOptions(), candle, params);
+        md_node = std::make_shared<MdNode>(md_ns, rclcpp::NodeOptions(), candle, params);
         exec.add_node(md_node);
     }
 
     if (launch_pds)
     {
-        pds_node = std::make_shared<PdsNode>(rclcpp::NodeOptions(), candle, params);
+        pds_node = std::make_shared<PdsNode>(pds_ns, rclcpp::NodeOptions(), candle, params);
         exec.add_node(pds_node);
     }
 

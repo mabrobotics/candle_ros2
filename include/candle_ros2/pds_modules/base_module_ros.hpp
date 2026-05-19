@@ -14,8 +14,7 @@ class I_BaseModuleRos
                        mab::socketIndex_E            socket,
                        const int                     pdsId,
                        rclcpp::QoS&                  qos,
-                       const std::string&            nodePrefix = "pds/",
-                       const int                     timerMs    = 1000) = 0;
+                       const int                     timerMs = 1000) = 0;
 
   protected:
     std::shared_ptr<rclcpp::Node> m_parentNode;

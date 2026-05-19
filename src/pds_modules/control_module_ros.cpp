@@ -5,7 +5,6 @@ bool ControlModuleRos::setup(std::shared_ptr<rclcpp::Node> node,
                              mab::socketIndex_E            socket,
                              const int                     pdsId,
                              rclcpp::QoS&                  qos,
-                             const std::string&            nodePrefix,
                              const int                     timerMs)
 {
     m_parentNode    = node;
@@ -16,7 +15,7 @@ bool ControlModuleRos::setup(std::shared_ptr<rclcpp::Node> node,
         return false;
 
     pubData = m_parentNode->create_publisher<candle_ros2::msg::ControlModuleData>(
-        nodePrefix + "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME), qos);
+        "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME), qos);
 
     tmrPub = m_parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
                                              std::bind(&ControlModuleRos::publishStatus, this));

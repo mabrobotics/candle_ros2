@@ -1,9 +1,10 @@
 #include "candle_ros2/md_node.hpp"
 
-MdNode::MdNode(const rclcpp::NodeOptions&   options,
+MdNode::MdNode(const std::string&           ns,
+               const rclcpp::NodeOptions&   options,
                std::shared_ptr<mab::Candle> candle,
                const candleParams_S&        params)
-    : Node("candle_md_node", options), m_candle(candle)
+    : Node("md_node", ns, options), m_candle(candle)
 {
     rclcpp::QoS defaultQoS(10);
     defaultQoS.reliable();
@@ -11,40 +12,29 @@ MdNode::MdNode(const rclcpp::NodeOptions&   options,
     if (params.default_qos == "BestEffort")
         defaultQoS.best_effort();
 
-    pubJointState = this->create_publisher<sensor_msgs::msg::JointState>(
-        std::string(NODE_PREFIX) + "joint_states", defaultQoS);
+    pubJointState =
+        this->create_publisher<sensor_msgs::msg::JointState>("joint_states", defaultQoS);
 
     subMotionCmd = this->create_subscription<candle_ros2::msg::MotionCmd>(
-        std::string(NODE_PREFIX) + "motion_command",
-        10,
-        std::bind(&MdNode::cbMotionCmd, this, std::placeholders::_1));
+        "motion_command", 10, std::bind(&MdNode::cbMotionCmd, this, std::placeholders::_1));
     subPositionCmd = this->create_subscription<candle_ros2::msg::PositionPidCmd>(
-        std::string(NODE_PREFIX) + "position_command",
-        10,
-        std::bind(&MdNode::cbPositionCmd, this, std::placeholders::_1));
+        "position_command", 10, std::bind(&MdNode::cbPositionCmd, this, std::placeholders::_1));
     subVelocityCmd = this->create_subscription<candle_ros2::msg::VelocityPidCmd>(
-        std::string(NODE_PREFIX) + "velocity_command",
-        10,
-        std::bind(&MdNode::cbVelocityCmd, this, std::placeholders::_1));
+        "velocity_command", 10, std::bind(&MdNode::cbVelocityCmd, this, std::placeholders::_1));
     subImpedanceCmd = this->create_subscription<candle_ros2::msg::ImpedanceCmd>(
-        std::string(NODE_PREFIX) + "impedance_command",
-        10,
-        std::bind(&MdNode::cbImpedanceCmd, this, std::placeholders::_1));
+        "impedance_command", 10, std::bind(&MdNode::cbImpedanceCmd, this, std::placeholders::_1));
 
     srvAddMd = this->create_service<candle_ros2::srv::AddDevices>(
-        std::string(NODE_PREFIX) + "add_mds",
-        std::bind(&MdNode::cbAddMd, this, std::placeholders::_1, std::placeholders::_2));
+        "add_mds", std::bind(&MdNode::cbAddMd, this, std::placeholders::_1, std::placeholders::_2));
     srvZero = this->create_service<candle_ros2::srv::Generic>(
-        std::string(NODE_PREFIX) + "zero",
-        std::bind(&MdNode::cbZero, this, std::placeholders::_1, std::placeholders::_2));
+        "zero", std::bind(&MdNode::cbZero, this, std::placeholders::_1, std::placeholders::_2));
     srvSetMode = this->create_service<candle_ros2::srv::SetMode>(
-        std::string(NODE_PREFIX) + "set_mode",
+        "set_mode",
         std::bind(&MdNode::cbSetMode, this, std::placeholders::_1, std::placeholders::_2));
     srvEnable = this->create_service<candle_ros2::srv::Generic>(
-        std::string(NODE_PREFIX) + "enable",
-        std::bind(&MdNode::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
+        "enable", std::bind(&MdNode::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
     srvDisable = this->create_service<candle_ros2::srv::Generic>(
-        std::string(NODE_PREFIX) + "disable",
+        "disable",
         std::bind(&MdNode::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 
     tmrPub = this->create_wall_timer(std::chrono::milliseconds(PUB_TIMER_MS),

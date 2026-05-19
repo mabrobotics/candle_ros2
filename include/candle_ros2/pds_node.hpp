@@ -22,7 +22,8 @@
 class PdsNode : public rclcpp::Node
 {
   public:
-    PdsNode(const rclcpp::NodeOptions&   options,
+    PdsNode(const std::string&           ns,
+            const rclcpp::NodeOptions&   options,
             std::shared_ptr<mab::Candle> candle,
             const candleParams_S&        params);
     ~PdsNode();
@@ -31,8 +32,7 @@ class PdsNode : public rclcpp::Node
     std::shared_ptr<mab::Candle> m_candle;
     std::vector<pdsInstance_S>   m_pdsList;
 
-    static constexpr const char* NODE_PREFIX  = "pds/";
-    static constexpr int         PUB_TIMER_MS = 100;  // 10 Hz
+    static constexpr int PUB_TIMER_MS = 100;  // 10 Hz
 
     rclcpp::QoS m_defaultQoS;
 

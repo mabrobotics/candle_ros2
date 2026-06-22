@@ -4,7 +4,7 @@ MdNode::MdNode(const std::string&           ns,
                const rclcpp::NodeOptions&   options,
                std::shared_ptr<mab::Candle> candle,
                const candleParams_S&        params)
-    : Node("md_node", ns, options), m_candle(candle)
+    : Node("candle_md_node", ns, options), m_candle(candle)
 {
     rclcpp::QoS defaultQoS(10);
     defaultQoS.reliable();

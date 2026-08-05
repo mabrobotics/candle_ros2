@@ -12,6 +12,8 @@
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <!-- CANdle-SDK's USB backend includes and links libusb directly. -->
+  <depend>libusb-1.0-dev</depend>
 
   <build_depend>rclcpp_components</build_depend>
   <exec_depend>rclcpp_components</exec_depend>

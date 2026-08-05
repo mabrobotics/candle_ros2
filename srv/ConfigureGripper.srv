@@ -1,0 +1,9 @@
+# Configure a group of MD drives for gripper impedance control.
+# Every array must have the same length as device_ids.
+uint16[] device_ids
+float64[] kp
+float64[] kd
+float64[] velocity_limit_rad_s
+float64[] torque_limit_nm
+---
+bool[] success

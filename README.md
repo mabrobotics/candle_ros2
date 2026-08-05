@@ -76,8 +76,14 @@ ros2 launch candle_ros2 md_node_launch.py bus:=SPI data_rate:=5M
 
 ## Example MD service calls - GRIPPER CONTROL
 
-Bring up one or more drives (add → set mode → zero → enable), then open or close the gripper.
-`init_devices` applies the same mode to all listed IDs. Gripper open/close use the impedance gains and positions defined in `md_node.hpp` (`IMP_KP`, `IMP_KD`, `IMP_MAX_OUTPUT`, `OPEN_POS`, `CLOSED_POS`).
+Bring up one or more drives, then open or close the gripper. `init_devices`
+adds each drive, applies the requested mode, and enables it. Encoder zeroing is
+disabled by default: zero only when the mechanism is at a known reference, or
+launch with `init_devices_zero:=true` when that condition is guaranteed.
+
+The legacy open/close services use the node-wide gripper parameters. A
+multi-motor gripper should instead use `/md/set_gripper_targets`, which accepts
+one independently calibrated target and limit set per drive.
 
 ```bash
 # Bring up device 343 in impedance mode
@@ -91,9 +97,27 @@ ros2 service call /md/open_gripper candle_ros2/srv/Generic "{device_ids: [343]}"
 # Optional: set impedance gains explicitly (overwritten again by open/close)
 ros2 topic pub /md/impedance_command candle_ros2/msg/ImpedanceCmd \
   "{device_ids: [343], kp: [5.0], kd: [0.05], max_output: [3.5]}" --once
+
+# Three independently calibrated motors in one acknowledged batch request
+ros2 service call /md/configure_gripper candle_ros2/srv/ConfigureGripper \
+  "{device_ids: [343, 344, 345], kp: [5.0, 5.0, 5.0], kd: [0.05, 0.05, 0.05],
+    velocity_limit_rad_s: [3.5, 3.5, 3.5],
+    torque_limit_nm: [3.5, 3.5, 3.5]}"
+ros2 service call /md/set_gripper_targets candle_ros2/srv/SetGripperTargets \
+  "{device_ids: [343, 344, 345], target_position_rad: [0.83, 0.83, 0.83]}"
 ```
 
 Individual steps are also available as `/md/add_mds`, `/md/set_mode`, `/md/zero`, and `/md/enable`.
+
+Relevant MD-node parameters are:
+
+- `joint_name_prefix` (`md_`)
+- `gripper_open_position_rad` (`0.0`)
+- `gripper_closed_position_rad` (`0.83`)
+- `gripper_impedance_kp` / `gripper_impedance_kd` (`5.0` / `0.05`)
+- `gripper_velocity_limit_rad_s` (`3.5`)
+- `gripper_torque_limit_nm` (`3.5`)
+- `init_devices_zero` (`false`)
 
 ## Documentation
 

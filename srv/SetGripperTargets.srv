@@ -1,0 +1,6 @@
+# Command an already configured group of MD drives.
+uint16[] device_ids
+float64[] target_position_rad
+---
+# One result per requested device, in request order.
+bool[] success

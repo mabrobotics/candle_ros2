@@ -39,10 +39,12 @@ set(msg_files
 
 set(srv_files
   "srv/AddDevices.srv"
+  "srv/ConfigureGripper.srv"
   "srv/Generic.srv"
   "srv/GenericPds.srv"
   "srv/InitDevices.srv"
   "srv/SetLimits.srv"
+  "srv/SetGripperTargets.srv"
   "srv/SetMode.srv"
 )
 

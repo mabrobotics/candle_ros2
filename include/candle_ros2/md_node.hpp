@@ -10,9 +10,11 @@
 
 /* Services */
 #include "candle_ros2/srv/add_devices.hpp"
+#include "candle_ros2/srv/configure_gripper.hpp"
 #include "candle_ros2/srv/generic.hpp"
 #include "candle_ros2/srv/init_devices.hpp"
 #include "candle_ros2/srv/set_limits.hpp"
+#include "candle_ros2/srv/set_gripper_targets.hpp"
 #include "candle_ros2/srv/set_mode.hpp"
 
 /* Utils */
@@ -37,12 +39,14 @@ class MdNode : public rclcpp::Node
     static constexpr const char* NODE_PREFIX  = "md/";
     static constexpr int         PUB_TIMER_MS = 5;  // 200 Hz
 
-    /* Gripper impedance defaults — tune for hardware */
-    static constexpr double OPEN_POS       = 0.0;
-    static constexpr double CLOSED_POS     = 0.83;
-    static constexpr float  IMP_KP         = 5.0f;
-    static constexpr float  IMP_KD         = 0.05f;
-    static constexpr float  IMP_MAX_OUTPUT = 3.5f; // max torque in Nm
+    std::string jointNamePrefix;
+    double      gripperOpenPositionRad;
+    double      gripperClosedPositionRad;
+    float       gripperImpedanceKp;
+    float       gripperImpedanceKd;
+    float       gripperVelocityLimitRadS;
+    float       gripperTorqueLimitNm;
+    bool        initDevicesZero;
 
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pubJointState;
 
@@ -51,15 +55,17 @@ class MdNode : public rclcpp::Node
     rclcpp::Subscription<candle_ros2::msg::VelocityPidCmd>::SharedPtr subVelocityCmd;
     rclcpp::Subscription<candle_ros2::msg::ImpedanceCmd>::SharedPtr   subImpedanceCmd;
 
-    rclcpp::Service<candle_ros2::srv::AddDevices>::SharedPtr  srvAddMd;
-    rclcpp::Service<candle_ros2::srv::InitDevices>::SharedPtr srvInitDevices;
-    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr     srvZero;
-    rclcpp::Service<candle_ros2::srv::SetMode>::SharedPtr     srvSetMode;
-    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr     srvEnable;
-    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr     srvDisable;
-    rclcpp::Service<candle_ros2::srv::SetLimits>::SharedPtr   srvSetLimits;
-    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr     srvOpen;
-    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr     srvClose;
+    rclcpp::Service<candle_ros2::srv::AddDevices>::SharedPtr        srvAddMd;
+    rclcpp::Service<candle_ros2::srv::InitDevices>::SharedPtr       srvInitDevices;
+    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr           srvZero;
+    rclcpp::Service<candle_ros2::srv::SetMode>::SharedPtr           srvSetMode;
+    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr           srvEnable;
+    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr           srvDisable;
+    rclcpp::Service<candle_ros2::srv::SetLimits>::SharedPtr         srvSetLimits;
+    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr           srvOpen;
+    rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr           srvClose;
+    rclcpp::Service<candle_ros2::srv::ConfigureGripper>::SharedPtr  srvConfigureGripper;
+    rclcpp::Service<candle_ros2::srv::SetGripperTargets>::SharedPtr srvSetGripperTargets;
 
     rclcpp::TimerBase::SharedPtr tmrPub;
 
@@ -88,7 +94,15 @@ class MdNode : public rclcpp::Node
                        std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
     void cbCloseGripper(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                         std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
+    void cbSetGripperTargets(
+        const std::shared_ptr<candle_ros2::srv::SetGripperTargets::Request> req,
+        std::shared_ptr<candle_ros2::srv::SetGripperTargets::Response>      rsp);
+    void cbConfigureGripper(const std::shared_ptr<candle_ros2::srv::ConfigureGripper::Request> req,
+                            std::shared_ptr<candle_ros2::srv::ConfigureGripper::Response>      rsp);
 
+    bool configureGripper(
+        mab::MD& md, double kp, double kd, double velocityLimit, double torqueLimit);
+    bool setGripperTarget(mab::MD& md, double targetPos);
     bool moveGripper(mab::MD& md, double targetPos);
 
     std::vector<mab::MD>::iterator findMd(std::vector<mab::MD>& mds, u16 id);

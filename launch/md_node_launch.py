@@ -3,6 +3,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -24,6 +25,17 @@ def generate_launch_description():
         description='Quality of Service: "BestEffort" or "Reliable"',
     )
 
+    gripper_args = [
+        DeclareLaunchArgument("joint_name_prefix", default_value="md_"),
+        DeclareLaunchArgument("gripper_open_position_rad", default_value="0.0"),
+        DeclareLaunchArgument("gripper_closed_position_rad", default_value="0.83"),
+        DeclareLaunchArgument("gripper_impedance_kp", default_value="5.0"),
+        DeclareLaunchArgument("gripper_impedance_kd", default_value="0.05"),
+        DeclareLaunchArgument("gripper_velocity_limit_rad_s", default_value="3.5"),
+        DeclareLaunchArgument("gripper_torque_limit_nm", default_value="3.5"),
+        DeclareLaunchArgument("init_devices_zero", default_value="false"),
+    ]
+
     bus = LaunchConfiguration("bus")
     data_rate = LaunchConfiguration("data_rate")
     default_qos = LaunchConfiguration("default_qos")
@@ -33,6 +45,7 @@ def generate_launch_description():
             bus_arg,
             data_rate_arg,
             default_qos_arg,
+            *gripper_args,
             Node(
                 package="candle_ros2",
                 executable="candle_container",
@@ -44,6 +57,28 @@ def generate_launch_description():
                         "bus": bus,
                         "data_rate": data_rate,
                         "default_qos": default_qos,
+                        "joint_name_prefix": LaunchConfiguration("joint_name_prefix"),
+                        "gripper_open_position_rad": ParameterValue(
+                            LaunchConfiguration("gripper_open_position_rad"), value_type=float
+                        ),
+                        "gripper_closed_position_rad": ParameterValue(
+                            LaunchConfiguration("gripper_closed_position_rad"), value_type=float
+                        ),
+                        "gripper_impedance_kp": ParameterValue(
+                            LaunchConfiguration("gripper_impedance_kp"), value_type=float
+                        ),
+                        "gripper_impedance_kd": ParameterValue(
+                            LaunchConfiguration("gripper_impedance_kd"), value_type=float
+                        ),
+                        "gripper_velocity_limit_rad_s": ParameterValue(
+                            LaunchConfiguration("gripper_velocity_limit_rad_s"), value_type=float
+                        ),
+                        "gripper_torque_limit_nm": ParameterValue(
+                            LaunchConfiguration("gripper_torque_limit_nm"), value_type=float
+                        ),
+                        "init_devices_zero": ParameterValue(
+                            LaunchConfiguration("init_devices_zero"), value_type=bool
+                        ),
                     }
                 ],
             ),

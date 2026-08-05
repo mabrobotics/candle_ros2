@@ -3,7 +3,7 @@
 MdNode::MdNode(const rclcpp::NodeOptions&   options,
                std::shared_ptr<mab::Candle> candle,
                const candleParams_S&        params)
-    : Node("candle_md_node", options), m_candle(candle)
+    : Node("candle_md_node", options), m_candle(std::move(candle))
 {
     rclcpp::QoS defaultQoS(10);
     defaultQoS.reliable();
@@ -34,6 +34,9 @@ MdNode::MdNode(const rclcpp::NodeOptions&   options,
     srvAddMd = this->create_service<candle_ros2::srv::AddDevices>(
         std::string(NODE_PREFIX) + "add_mds",
         std::bind(&MdNode::cbAddMd, this, std::placeholders::_1, std::placeholders::_2));
+    srvInitDevices = this->create_service<candle_ros2::srv::InitDevices>(
+        std::string(NODE_PREFIX) + "init_devices",
+        std::bind(&MdNode::cbInitDevices, this, std::placeholders::_1, std::placeholders::_2));
     srvZero = this->create_service<candle_ros2::srv::Generic>(
         std::string(NODE_PREFIX) + "zero",
         std::bind(&MdNode::cbZero, this, std::placeholders::_1, std::placeholders::_2));
@@ -46,6 +49,15 @@ MdNode::MdNode(const rclcpp::NodeOptions&   options,
     srvDisable = this->create_service<candle_ros2::srv::Generic>(
         std::string(NODE_PREFIX) + "disable",
         std::bind(&MdNode::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
+    srvSetLimits = this->create_service<candle_ros2::srv::SetLimits>(
+        std::string(NODE_PREFIX) + "set_limits",
+        std::bind(&MdNode::cbSetLimits, this, std::placeholders::_1, std::placeholders::_2));
+    srvOpen = this->create_service<candle_ros2::srv::Generic>(
+        std::string(NODE_PREFIX) + "open_gripper",
+        std::bind(&MdNode::cbOpenGripper, this, std::placeholders::_1, std::placeholders::_2));
+    srvClose = this->create_service<candle_ros2::srv::Generic>(
+        std::string(NODE_PREFIX) + "close_gripper",
+        std::bind(&MdNode::cbCloseGripper, this, std::placeholders::_1, std::placeholders::_2));
 
     tmrPub = this->create_wall_timer(std::chrono::milliseconds(PUB_TIMER_MS),
                                      std::bind(&MdNode::publishJointStates, this));
@@ -275,6 +287,43 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request
     return;
 }
 
+void MdNode::cbInitDevices(const std::shared_ptr<candle_ros2::srv::InitDevices::Request> req,
+                           std::shared_ptr<candle_ros2::srv::InitDevices::Response>      rsp)
+{
+    const size_t n = req->device_ids.size();
+    rsp->success.assign(n, false);
+
+    auto addReq  = std::make_shared<candle_ros2::srv::AddDevices::Request>();
+    auto addRsp  = std::make_shared<candle_ros2::srv::AddDevices::Response>();
+    addReq->device_ids = req->device_ids;
+    cbAddMd(addReq, addRsp);
+
+    auto modeReq = std::make_shared<candle_ros2::srv::SetMode::Request>();
+    auto modeRsp = std::make_shared<candle_ros2::srv::SetMode::Response>();
+    modeReq->device_ids = req->device_ids;
+    modeReq->mode.assign(n, req->mode);
+    cbSetMode(modeReq, modeRsp);
+
+    auto zeroReq = std::make_shared<candle_ros2::srv::Generic::Request>();
+    auto zeroRsp = std::make_shared<candle_ros2::srv::Generic::Response>();
+    zeroReq->device_ids = req->device_ids;
+    cbZero(zeroReq, zeroRsp);
+
+    auto enableReq = std::make_shared<candle_ros2::srv::Generic::Request>();
+    auto enableRsp = std::make_shared<candle_ros2::srv::Generic::Response>();
+    enableReq->device_ids = req->device_ids;
+    cbEnable(enableReq, enableRsp);
+
+    for (size_t i = 0; i < n; i++)
+    {
+        const bool added   = i < addRsp->success.size() && addRsp->success[i];
+        const bool modeOk  = i < modeRsp->success.size() && modeRsp->success[i];
+        const bool zeroed  = i < zeroRsp->success.size() && zeroRsp->success[i];
+        const bool enabled = i < enableRsp->success.size() && enableRsp->success[i];
+        rsp->success[i]    = added && modeOk && zeroed && enabled;
+    }
+}
+
 void MdNode::cbZero(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                     std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
 {
@@ -295,6 +344,128 @@ void MdNode::cbZero(const std::shared_ptr<candle_ros2::srv::Generic::Request> re
             rsp->success.push_back(false);
     }
     return;
+}
+
+void MdNode::cbSetLimits(const std::shared_ptr<candle_ros2::srv::SetLimits::Request> req,
+                           std::shared_ptr<candle_ros2::srv::SetLimits::Response>      rsp)
+{
+    if (req->device_ids.size() != req->velocity_limit.size() ||
+        req->device_ids.size() != req->torque_limit.size())
+    {
+        rsp->success.assign(req->device_ids.size(), false);
+        RCLCPP_WARN(this->get_logger(),
+                    "SetLimits request incomplete. Sizes of arrays do not match!");
+        return;
+    }
+
+    rsp->success.reserve(req->device_ids.size());
+    for (size_t i = 0; i < req->device_ids.size(); i++)
+    {
+        auto md = findMd(m_mds, req->device_ids[i]);
+        if (md == m_mds.end())
+        {
+            rsp->success.push_back(false);
+            continue;
+        }
+
+        mab::MDRegisters_S mdRegisters;
+        mdRegisters.profileVelocity = req->velocity_limit[i];
+        mdRegisters.maxTorque = req->torque_limit[i];
+        if (md->writeRegisters(mdRegisters.profileVelocity,
+                       mdRegisters.maxTorque) == mab::MD::Error_t::OK)
+        {
+            rsp->success.push_back(true);
+        }
+        else
+        {
+            rsp->success.push_back(false);
+        }
+    }
+    return;
+}
+
+bool MdNode::moveGripper(mab::MD& md, double targetPos)
+{
+    if (md.setMotionMode(mab::MdMode_E::IMPEDANCE) != mab::MD::Error_t::OK)
+    {
+        RCLCPP_WARN(this->get_logger(), "Failed to set IMPEDANCE mode for drive with ID: %d", md.m_canId);
+        return false;
+    }
+
+    mab::MDRegisters_S impedanceRegs;
+    impedanceRegs.motorImpPidKp = IMP_KP;
+    impedanceRegs.motorImpPidKd = IMP_KD;
+    impedanceRegs.maxTorque     = IMP_MAX_OUTPUT;
+    if (md.writeRegisters(impedanceRegs.motorImpPidKp,
+                          impedanceRegs.motorImpPidKd,
+                          impedanceRegs.maxTorque) != mab::MD::Error_t::OK)
+    {
+        RCLCPP_WARN(this->get_logger(), "Failed to set impedance gains for drive with ID: %d", md.m_canId);
+        return false;
+    }
+
+    mab::MDRegisters_S limitRegs;
+    limitRegs.profileVelocity = IMP_MAX_OUTPUT;
+    limitRegs.maxTorque       = IMP_MAX_OUTPUT;
+    if (md.writeRegisters(limitRegs.profileVelocity, limitRegs.maxTorque) != mab::MD::Error_t::OK)
+    {
+        RCLCPP_WARN(this->get_logger(), "Failed to set limits for drive with ID: %d", md.m_canId);
+        return false;
+    }
+
+    mab::MDRegisters_S motionRegs;
+    motionRegs.targetPosition = targetPos;
+    motionRegs.targetVelocity = 0.0;
+    motionRegs.targetTorque   = 0.0;
+    if (md.writeRegisters(motionRegs.targetPosition,
+                          motionRegs.targetVelocity,
+                          motionRegs.targetTorque) != mab::MD::Error_t::OK)
+    {
+        RCLCPP_WARN(this->get_logger(),
+                    "Failed to set target position for drive with ID: %d",
+                    md.m_canId);
+        return false;
+    }
+
+    return true;
+}
+
+void MdNode::cbOpenGripper(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
+                           std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
+{
+    rsp->success.reserve(req->device_ids.size());
+
+    for (auto id : req->device_ids)
+    {
+        auto md = findMd(m_mds, id);
+        if (md == m_mds.end())
+        {
+            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", id);
+            rsp->success.push_back(false);
+            continue;
+        }
+
+        rsp->success.push_back(moveGripper(*md, OPEN_POS));
+    }
+}
+
+void MdNode::cbCloseGripper(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
+                            std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
+{
+    rsp->success.reserve(req->device_ids.size());
+
+    for (auto id : req->device_ids)
+    {
+        auto md = findMd(m_mds, id);
+        if (md == m_mds.end())
+        {
+            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is not added!", id);
+            rsp->success.push_back(false);
+            continue;
+        }
+
+        rsp->success.push_back(moveGripper(*md, CLOSED_POS));
+    }
 }
 
 void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request> req,

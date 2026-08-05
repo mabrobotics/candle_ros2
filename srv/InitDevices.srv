@@ -1,0 +1,6 @@
+# Bring up MD devices: add_mds -> set_mode -> zero -> enable
+
+uint16[] device_ids # Device IDs
+string mode         # Mode applied to all devices: "IMPEDANCE", "POSITION_PID", "VELOCITY_PID", "RAW_TORQUE"
+---
+bool[] success      # Success status for each device (all steps must succeed)

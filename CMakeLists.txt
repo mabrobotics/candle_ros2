@@ -41,6 +41,7 @@ set(srv_files
   "srv/AddDevices.srv"
   "srv/Generic.srv"
   "srv/GenericPds.srv"
+  "srv/InitDevices.srv"
   "srv/SetLimits.srv"
   "srv/SetMode.srv"
 )

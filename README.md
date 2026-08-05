@@ -74,6 +74,27 @@ Example launch command with custom arguments:
 ros2 launch candle_ros2 md_node_launch.py bus:=SPI data_rate:=5M
 ```
 
+## Example MD service calls - GRIPPER CONTROL
+
+Bring up one or more drives (add → set mode → zero → enable), then open or close the gripper.
+`init_devices` applies the same mode to all listed IDs. Gripper open/close use the impedance gains and positions defined in `md_node.hpp` (`IMP_KP`, `IMP_KD`, `IMP_MAX_OUTPUT`, `OPEN_POS`, `CLOSED_POS`).
+
+```bash
+# Bring up device 343 in impedance mode
+ros2 service call /md/init_devices candle_ros2/srv/InitDevices \
+  "{device_ids: [343], mode: 'IMPEDANCE'}"
+
+# Close / open gripper
+ros2 service call /md/close_gripper candle_ros2/srv/Generic "{device_ids: [343]}"
+ros2 service call /md/open_gripper candle_ros2/srv/Generic "{device_ids: [343]}"
+
+# Optional: set impedance gains explicitly (overwritten again by open/close)
+ros2 topic pub /md/impedance_command candle_ros2/msg/ImpedanceCmd \
+  "{device_ids: [343], kp: [5.0], kd: [0.05], max_output: [3.5]}" --once
+```
+
+Individual steps are also available as `/md/add_mds`, `/md/set_mode`, `/md/zero`, and `/md/enable`.
+
 ## Documentation
 
 Full CANdle ROS2 documentation:

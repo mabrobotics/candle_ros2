@@ -323,11 +323,14 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request
             continue;
         }
 
-        // Give the drive 5 ms (50 x 100 us) to answer instead of the 1 ms
+        // Give the drive 10 ms (100 x 100 us) to answer instead of the 1 ms
         // SDK default. On a loaded host the USB round trip alone can exceed
         // the default window, and the SDK misreports that as "CAN frame did
-        // not reach target device" even though the bus is healthy.
-        md.m_timeout = 50;
+        // not reach target device" even though the bus is healthy. This is
+        // only an upper bound: a healthy drive's reply completes the
+        // transfer immediately, so the wider window costs nothing when the
+        // bus is working.
+        md.m_timeout = 100;
 
         m_mds.push_back(std::move(md));
         rsp->success.push_back(true);

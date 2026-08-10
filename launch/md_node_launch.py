@@ -13,6 +13,12 @@ def generate_launch_description():
         description="Bus type: USB or SPI",
     )
 
+    usb_serial_arg = DeclareLaunchArgument(
+        "usb_serial",
+        default_value="",
+        description="Complete USB serial of the CANdle adapter",
+    )
+
     data_rate_arg = DeclareLaunchArgument(
         "data_rate",
         default_value="1M",
@@ -37,12 +43,14 @@ def generate_launch_description():
     ]
 
     bus = LaunchConfiguration("bus")
+    usb_serial = LaunchConfiguration("usb_serial")
     data_rate = LaunchConfiguration("data_rate")
     default_qos = LaunchConfiguration("default_qos")
 
     return LaunchDescription(
         [
             bus_arg,
+            usb_serial_arg,
             data_rate_arg,
             default_qos_arg,
             *gripper_args,
@@ -55,6 +63,7 @@ def generate_launch_description():
                         "launch_md_node": True,
                         "launch_pds_node": False,
                         "bus": bus,
+                        "usb_serial": ParameterValue(usb_serial, value_type=str),
                         "data_rate": data_rate,
                         "default_qos": default_qos,
                         "joint_name_prefix": LaunchConfiguration("joint_name_prefix"),

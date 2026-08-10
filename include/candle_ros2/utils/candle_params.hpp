@@ -4,6 +4,7 @@
 struct candleParams_S
 {
     std::string bus;
+    std::string usb_serial;
     std::string data_rate;
     std::string default_qos;
     std::string joint_name_prefix;

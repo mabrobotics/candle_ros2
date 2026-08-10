@@ -3,6 +3,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -10,6 +11,12 @@ def generate_launch_description():
         "bus",
         default_value="USB",
         description="Bus type: USB or SPI",
+    )
+
+    usb_serial_arg = DeclareLaunchArgument(
+        "usb_serial",
+        default_value="",
+        description="Complete USB serial of the CANdle adapter",
     )
 
     data_rate_arg = DeclareLaunchArgument(
@@ -25,12 +32,14 @@ def generate_launch_description():
     )
 
     bus = LaunchConfiguration("bus")
+    usb_serial = LaunchConfiguration("usb_serial")
     data_rate = LaunchConfiguration("data_rate")
     default_qos = LaunchConfiguration("default_qos")
 
     return LaunchDescription(
         [
             bus_arg,
+            usb_serial_arg,
             data_rate_arg,
             default_qos_arg,
             Node(
@@ -42,6 +51,7 @@ def generate_launch_description():
                         "launch_md_node": True,
                         "launch_pds_node": True,
                         "bus": bus,
+                        "usb_serial": ParameterValue(usb_serial, value_type=str),
                         "data_rate": data_rate,
                         "default_qos": default_qos,
                     }

@@ -1,4 +1,8 @@
 #pragma once
+#include <memory>
+#include <stdexcept>
+#include <utility>
+
 #include "rclcpp/rclcpp.hpp"
 
 /* Utils */
@@ -11,6 +15,7 @@ inline candleParams_S readParams(const rclcpp::Node::SharedPtr& node)
 {
     node->declare_parameter<std::string>("data_rate", "1M");
     node->declare_parameter<std::string>("bus", "USB");
+    node->declare_parameter<std::string>("usb_serial", "");
     node->declare_parameter<std::string>("default_qos", "Reliable");
     node->declare_parameter<std::string>("joint_name_prefix", "md_");
     node->declare_parameter<double>("gripper_open_position_rad", 0.0);
@@ -24,6 +29,7 @@ inline candleParams_S readParams(const rclcpp::Node::SharedPtr& node)
     candleParams_S params;
     params.data_rate   = node->get_parameter("data_rate").as_string();
     params.bus         = node->get_parameter("bus").as_string();
+    params.usb_serial  = node->get_parameter("usb_serial").as_string();
     params.default_qos = node->get_parameter("default_qos").as_string();
     params.joint_name_prefix = node->get_parameter("joint_name_prefix").as_string();
     params.gripper_open_position_rad =
@@ -54,6 +60,18 @@ inline std::shared_ptr<mab::Candle> createCandle(const candleParams_S& params)
 
     if (params.bus == "SPI")
         bus = mab::candleTypes::busTypes_t::SPI;
+
+    if (bus == mab::candleTypes::busTypes_t::USB)
+    {
+        std::unique_ptr<mab::I_CommunicationInterface> usb =
+            std::make_unique<mab::USB>(mab::Candle::CANDLE_VID,
+                                       mab::Candle::CANDLE_PID,
+                                       params.usb_serial);
+        if (usb->connect() != mab::I_CommunicationInterface::Error_t::OK)
+            throw std::runtime_error("Could not connect selected USB device!");
+        return std::shared_ptr<mab::Candle>(
+            mab::attachCandle(dataRate, std::move(usb)));
+    }
 
     return std::shared_ptr<mab::Candle>(mab::attachCandle(dataRate, bus));
 }

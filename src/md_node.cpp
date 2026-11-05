@@ -37,8 +37,8 @@ MdNode::MdNode(const std::string&           ns,
         "disable",
         std::bind(&MdNode::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
 
-    tmrPub = this->create_wall_timer(std::chrono::milliseconds(PUB_TIMER_MS),
-                                     std::bind(&MdNode::publishJointStates, this));
+    tmrLoop = this->create_wall_timer(std::chrono::milliseconds(LOOP_TIMER_MS),
+                                      std::bind(&MdNode::controlLoop, this));
 
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 MD node started.");
 }
@@ -48,7 +48,7 @@ MdNode::~MdNode()
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 MD node finished.");
 }
 
-void MdNode::publishJointStates()
+void MdNode::controlLoop()
 {
     sensor_msgs::msg::JointState msgJointStates;
 
@@ -57,13 +57,45 @@ void MdNode::publishJointStates()
     msgJointStates.velocity.reserve(m_mds.size());
     msgJointStates.effort.reserve(m_mds.size());
 
+    mab::MDRegisters_S regs;
+
     msgJointStates.header.stamp = this->get_clock()->now();
-    for (auto& md : m_mds)
+    for (size_t i = 0; i < m_mds.size(); i++)
     {
+        mab::MD& md  = m_mds[i];
+        mdCmd_S& cmd = m_cmds[i];
+
+        if (cmd.pending)
+        {
+            cmd.pending         = false;
+            regs.targetPosition = cmd.position;
+            regs.targetVelocity = cmd.velocity;
+            regs.targetTorque   = cmd.torque;
+            if (md.writeRegisters(regs.targetPosition, regs.targetVelocity, regs.targetTorque) !=
+                mab::MD::Error_t::OK)
+                RCLCPP_WARN_THROTTLE(this->get_logger(),
+                                     *this->get_clock(),
+                                     1000,
+                                     "Failed to set Motion Command for drive with ID: %d",
+                                     md.m_canId);
+        }
+
+        if (md.readRegisters(regs.mainEncoderPosition,
+                             regs.mainEncoderVelocity,
+                             regs.motorTorque) != mab::MD::Error_t::OK)
+        {
+            RCLCPP_WARN_THROTTLE(this->get_logger(),
+                                 *this->get_clock(),
+                                 1000,
+                                 "Failed to read state of drive with ID: %d",
+                                 md.m_canId);
+            continue;
+        }
+
         msgJointStates.name.push_back(std::string("Joint " + std::to_string(md.m_canId)));
-        msgJointStates.position.push_back(md.getPosition().first);
-        msgJointStates.velocity.push_back(md.getVelocity().first);
-        msgJointStates.effort.push_back(md.getTorque().first);
+        msgJointStates.position.push_back(regs.mainEncoderPosition.value);
+        msgJointStates.velocity.push_back(regs.mainEncoderVelocity.value);
+        msgJointStates.effort.push_back(regs.motorTorque.value);
     }
     this->pubJointState->publish(msgJointStates);
     return;
@@ -91,17 +123,8 @@ void MdNode::cbMotionCmd(const candle_ros2::msg::MotionCmd& msg)
             continue;
         }
 
-        mab::MDRegisters_S mdRegisters;
-        mdRegisters.targetPosition = msg.target_position[i];
-        mdRegisters.targetVelocity = msg.target_velocity[i];
-        mdRegisters.targetTorque   = msg.target_torque[i];
-
-        if (md->writeRegisters(mdRegisters.targetPosition,
-                               mdRegisters.targetVelocity,
-                               mdRegisters.targetTorque) != mab::MD::Error_t::OK)
-            RCLCPP_WARN(this->get_logger(),
-                        "Failed to set Motion Command for drive with ID: %d",
-                        msg.device_ids[i]);
+        m_cmds[md - m_mds.begin()] = {
+            msg.target_position[i], msg.target_velocity[i], msg.target_torque[i], true};
     }
     return;
 }
@@ -266,6 +289,7 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request
         }
 
         m_mds.push_back(std::move(md));
+        m_cmds.push_back({});
         rsp->success.push_back(true);
     }
     rsp->total_devices = static_cast<u16>(m_mds.size());
@@ -312,8 +336,11 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request>
     {
         mab::MdMode_E      mode    = mab::MdMode_E::IDLE;
         const std::string& reqMode = req->mode[i];
+        bool               known   = true;
 
-        if (reqMode == "IMPEDANCE")
+        if (reqMode == "IDLE")
+            mode = mab::MdMode_E::IDLE;
+        else if (reqMode == "IMPEDANCE")
             mode = mab::MdMode_E::IMPEDANCE;
         else if (reqMode == "POSITION_PID")
             mode = mab::MdMode_E::POSITION_PID;
@@ -323,6 +350,7 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request>
             mode = mab::MdMode_E::RAW_TORQUE;
         else
         {
+            known = false;
             RCLCPP_WARN(this->get_logger(),
                         "MODE %s not recognized, setting IDLE for drive with ID: %d",
                         reqMode.c_str(),
@@ -336,7 +364,7 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request>
             continue;
         }
 
-        if (md->setMotionMode(mode) == mab::MD::Error_t::OK)
+        if (md->setMotionMode(mode) == mab::MD::Error_t::OK && known)
             rsp->success.push_back(true);
         else
             rsp->success.push_back(false);

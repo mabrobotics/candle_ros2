@@ -128,16 +128,16 @@ void MdNode::cbPositionCmd(const candle_ros2::msg::PositionPidCmd& msg)
         }
 
         mab::MDRegisters_S mdRegisters;
-        mdRegisters.motorVelPidKp     = msg.position_pid[i].kp;
-        mdRegisters.motorVelPidKi     = msg.position_pid[i].ki;
-        mdRegisters.motorVelPidKd     = msg.position_pid[i].kd;
-        mdRegisters.motorVelPidWindup = msg.position_pid[i].i_windup;
-        mdRegisters.profileVelocity   = msg.position_pid[i].max_output;
-        if (md->writeRegisters(mdRegisters.motorVelPidKp,
-                               mdRegisters.motorVelPidKi,
-                               mdRegisters.motorVelPidKd,
-                               mdRegisters.motorVelPidWindup,
-                               mdRegisters.profileVelocity) != mab::MD::Error_t::OK)
+        mdRegisters.motorPosPidKp     = msg.position_pid[i].kp;
+        mdRegisters.motorPosPidKi     = msg.position_pid[i].ki;
+        mdRegisters.motorPosPidKd     = msg.position_pid[i].kd;
+        mdRegisters.motorPosPidWindup = msg.position_pid[i].i_windup;
+        mdRegisters.maxVelocity       = msg.position_pid[i].max_output;
+        if (md->writeRegisters(mdRegisters.motorPosPidKp,
+                               mdRegisters.motorPosPidKi,
+                               mdRegisters.motorPosPidKd,
+                               mdRegisters.motorPosPidWindup,
+                               mdRegisters.maxVelocity) != mab::MD::Error_t::OK)
         {
             RCLCPP_WARN(this->get_logger(),
                         "Failed to set Position PID parameters for drive with ID: %d",
@@ -251,6 +251,13 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request
 
     for (auto id : req->device_ids)
     {
+        if (findMd(m_mds, id) != m_mds.end())
+        {
+            RCLCPP_WARN(this->get_logger(), "Drive with ID: %d is already added!", id);
+            rsp->success.push_back(false);
+            continue;
+        }
+
         mab::MD md(id, m_candle.get());
         if (md.init() != mab::MD::Error_t::OK)
         {

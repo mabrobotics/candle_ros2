@@ -36,6 +36,16 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
     for (auto id : req->device_ids)
     {
+        if (std::any_of(m_pdsList.begin(),
+                        m_pdsList.end(),
+                        [id](const pdsInstance_S& inst)
+                        { return inst.pds && inst.pds->getCanId() == id; }))
+        {
+            RCLCPP_WARN(this->get_logger(), "PDS with id %d is already added!", id);
+            rsp->success.push_back(false);
+            continue;
+        }
+
         pdsInstance_S instance = pdsInstance_S{};
 
         instance.pds = std::make_unique<mab::Pds>(id, m_candle.get());
@@ -59,7 +69,7 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
                                &mab::Pds::modulesSet_S::moduleTypeSocket6};
 
         auto ctrl = std::make_unique<ControlModuleRos>();
-        if (ctrl->setup(shared_from_this(),
+        if (ctrl->setup(this,
                         *instance.pds,
                         mab::socketIndex_E::UNASSIGNED,
                         id,
@@ -80,7 +90,7 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
             if (mod)
             {
-                if (mod->setup(shared_from_this(),
+                if (mod->setup(this,
                                *instance.pds,
                                static_cast<mab::socketIndex_E>(i + 1),
                                id,

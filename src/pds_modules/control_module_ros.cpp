@@ -1,11 +1,11 @@
 #include "candle_ros2/pds_modules/control_module_ros.hpp"
 
-bool ControlModuleRos::setup(std::shared_ptr<rclcpp::Node> node,
-                             mab::Pds&                     pds,
-                             mab::socketIndex_E            socket,
-                             const int                     pdsId,
-                             rclcpp::QoS&                  qos,
-                             const int                     timerMs)
+bool ControlModuleRos::setup(rclcpp::Node*      node,
+                             mab::Pds&          pds,
+                             mab::socketIndex_E socket,
+                             const int          pdsId,
+                             rclcpp::QoS&       qos,
+                             const int          timerMs)
 {
     m_parentNode    = node;
     m_controlModule = &pds;

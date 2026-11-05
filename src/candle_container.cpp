@@ -21,7 +21,23 @@ int main(int argc, char** argv)
     bool launch_pds = config_node->get_parameter("launch_pds_node").as_bool();
 
     candleParams_S params = readParams(config_node);
-    auto           candle = createCandle(params);
+
+    std::shared_ptr<mab::Candle> candle;
+    try
+    {
+        candle = createCandle(params);
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_FATAL(config_node->get_logger(), "%s", e.what());
+    }
+
+    if (!candle)
+    {
+        RCLCPP_FATAL(config_node->get_logger(), "Failed to attach CANdle. Exiting.");
+        rclcpp::shutdown();
+        return 1;
+    }
 
     rclcpp::executors::SingleThreadedExecutor exec;
     exec.add_node(config_node);

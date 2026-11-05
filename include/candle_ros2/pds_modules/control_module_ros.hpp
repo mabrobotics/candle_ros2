@@ -13,12 +13,12 @@
 class ControlModuleRos : public I_BaseModuleRos
 {
   public:
-    bool setup(std::shared_ptr<rclcpp::Node> node,
-               mab::Pds&                     pds,
-               mab::socketIndex_E            socket,
-               const int                     pdsId,
-               rclcpp::QoS&                  qos,
-               const int                     timerMs = 1000) override;
+    bool setup(rclcpp::Node*      node,
+               mab::Pds&          pds,
+               mab::socketIndex_E socket,
+               const int          pdsId,
+               rclcpp::QoS&       qos,
+               const int          timerMs = 1000) override;
 
   private:
     static constexpr const char* MODULE_NAME = "ctrl";

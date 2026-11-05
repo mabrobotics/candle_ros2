@@ -1,11 +1,11 @@
 #include "candle_ros2/pds_modules/isolated_converter_ros.hpp"
 
-bool IsolatedConverterRos::setup(std::shared_ptr<rclcpp::Node> node,
-                                 mab::Pds&                     pds,
-                                 mab::socketIndex_E            socket,
-                                 const int                     pdsId,
-                                 rclcpp::QoS&                  qos,
-                                 const int                     timerMs)
+bool IsolatedConverterRos::setup(rclcpp::Node*      node,
+                                 mab::Pds&          pds,
+                                 mab::socketIndex_E socket,
+                                 const int          pdsId,
+                                 rclcpp::QoS&       qos,
+                                 const int          timerMs)
 {
     m_parentNode = node;
 

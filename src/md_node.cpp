@@ -98,7 +98,6 @@ void MdNode::controlLoop()
         msgJointStates.effort.push_back(regs.motorTorque.value);
     }
     this->pubJointState->publish(msgJointStates);
-    return;
 }
 
 void MdNode::cbMotionCmd(const candle_ros2::msg::MotionCmd& msg)
@@ -126,7 +125,6 @@ void MdNode::cbMotionCmd(const candle_ros2::msg::MotionCmd& msg)
         m_cmds[md - m_mds.begin()] = {
             msg.target_position[i], msg.target_velocity[i], msg.target_torque[i], true};
     }
-    return;
 }
 
 void MdNode::cbPositionCmd(const candle_ros2::msg::PositionPidCmd& msg)
@@ -186,7 +184,6 @@ void MdNode::cbPositionCmd(const candle_ros2::msg::PositionPidCmd& msg)
             }
         }
     }
-    return;
 }
 
 void MdNode::cbVelocityCmd(const candle_ros2::msg::VelocityPidCmd& msg)
@@ -227,7 +224,6 @@ void MdNode::cbVelocityCmd(const candle_ros2::msg::VelocityPidCmd& msg)
                         msg.device_ids[i]);
         }
     }
-    return;
 }
 
 void MdNode::cbImpedanceCmd(const candle_ros2::msg::ImpedanceCmd& msg)
@@ -264,7 +260,6 @@ void MdNode::cbImpedanceCmd(const candle_ros2::msg::ImpedanceCmd& msg)
                         msg.device_ids[i]);
         }
     }
-    return;
 }
 
 void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request> req,
@@ -293,7 +288,6 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request
         rsp->success.push_back(true);
     }
     rsp->total_devices = static_cast<u16>(m_mds.size());
-    return;
 }
 
 void MdNode::cbZero(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
@@ -315,7 +309,6 @@ void MdNode::cbZero(const std::shared_ptr<candle_ros2::srv::Generic::Request> re
         else
             rsp->success.push_back(false);
     }
-    return;
 }
 
 void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request> req,
@@ -369,7 +362,6 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request>
         else
             rsp->success.push_back(false);
     }
-    return;
 }
 
 void MdNode::cbEnable(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
@@ -391,7 +383,6 @@ void MdNode::cbEnable(const std::shared_ptr<candle_ros2::srv::Generic::Request> 
         else
             rsp->success.push_back(false);
     }
-    return;
 }
 
 void MdNode::cbDisable(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
@@ -413,7 +404,6 @@ void MdNode::cbDisable(const std::shared_ptr<candle_ros2::srv::Generic::Request>
         else
             rsp->success.push_back(false);
     }
-    return;
 }
 
 std::vector<mab::MD>::iterator MdNode::findMd(std::vector<mab::MD>& mds, u16 id)

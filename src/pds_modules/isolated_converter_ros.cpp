@@ -14,20 +14,9 @@ bool IsolatedConverterRos::setup(rclcpp::Node*      node,
         return false;
 
     pubData = m_parentNode->create_publisher<candle_ros2::msg::IsolatedConverterData>(
-        "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
-            std::to_string(static_cast<int>(socket)),
-        qos);
+        topicName(pdsId, MODULE_NAME, socket), qos);
 
-    srvEnable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
-        "id_" + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +
-            std::to_string(static_cast<int>(socket)),
-        std::bind(
-            &IsolatedConverterRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
-    srvDisable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
-        "id_" + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
-            std::to_string(static_cast<int>(socket)),
-        std::bind(
-            &IsolatedConverterRos::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
+    createEnableServices(m_isolatedConverter.get(), pdsId, MODULE_NAME, socket);
 
     tmrPub = m_parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
                                              std::bind(&IsolatedConverterRos::publishStatus, this));
@@ -53,27 +42,4 @@ void IsolatedConverterRos::publishStatus()
     m_isolatedConverter->getTemperatureLimit(msg.temperature_limit);
 
     pubData->publish(msg);
-}
-
-void IsolatedConverterRos::cbEnable(
-    const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
-    std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
-{
-    (void)req;
-    if (m_isolatedConverter->enable() != mab::PdsModule::error_E::OK)
-        rsp->success.push_back(false);
-    else
-        rsp->success.push_back(true);
-    return;
-}
-void IsolatedConverterRos::cbDisable(
-    const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
-    std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
-{
-    (void)req;
-    if (m_isolatedConverter->disable() != mab::PdsModule::error_E::OK)
-        rsp->success.push_back(false);
-    else
-        rsp->success.push_back(true);
-    return;
 }

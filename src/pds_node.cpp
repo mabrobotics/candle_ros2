@@ -154,8 +154,6 @@ void PdsNode::cbReboot(const std::shared_ptr<candle_ros2::srv::Generic::Request>
         else
             rsp->success.push_back(false);
     }
-
-    return;
 }
 
 void PdsNode::cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
@@ -187,8 +185,6 @@ void PdsNode::cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Reques
         else
             rsp->success.push_back(false);
     }
-
-    return;
 }
 
 std::unique_ptr<I_BaseModuleRos> PdsNode::createModule(mab::moduleType_E type)

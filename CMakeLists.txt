@@ -61,7 +61,12 @@ rosidl_get_typesupport_target(cpp_typesupport_target
   rosidl_typesupport_cpp
 )
 
-file(GLOB_RECURSE pds_sources "src/pds_modules/*.cpp")
+set(pds_sources
+  src/pds_modules/brake_resistor_ros.cpp
+  src/pds_modules/control_module_ros.cpp
+  src/pds_modules/isolated_converter_ros.cpp
+  src/pds_modules/power_stage_ros.cpp
+)
 
 # MD Node
 add_library(${md_node_name} STATIC

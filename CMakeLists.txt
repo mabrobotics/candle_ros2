@@ -54,7 +54,11 @@ ament_export_dependencies(rosidl_default_runtime)
 
 set(CANDLESDK_BUILD_CANDLETOOL OFF CACHE BOOL "Disable candletool build" FORCE)
 set(CANDLESDK_BUILD_EXAMPLES OFF CACHE BOOL "Disable examples build" FORCE)
+set(CANDLESDK_BUILD_MDGUI OFF CACHE BOOL "Disable mdgui build" FORCE)
 add_subdirectory(CANdle-SDK EXCLUDE_FROM_ALL)
+
+get_target_property(candle_includes candle INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(candle PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${candle_includes}")
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME}

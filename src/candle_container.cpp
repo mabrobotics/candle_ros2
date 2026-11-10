@@ -21,23 +21,42 @@ int main(int argc, char** argv)
     bool launch_pds = config_node->get_parameter("launch_pds_node").as_bool();
 
     candleParams_S params = readParams(config_node);
-    auto           candle = createCandle(params);
+
+    std::shared_ptr<mab::Candle> candle;
+    try
+    {
+        candle = createCandle(params);
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_FATAL(config_node->get_logger(), "%s", e.what());
+    }
+
+    if (!candle)
+    {
+        RCLCPP_FATAL(config_node->get_logger(), "Failed to attach CANdle. Exiting.");
+        rclcpp::shutdown();
+        return 1;
+    }
 
     rclcpp::executors::SingleThreadedExecutor exec;
     exec.add_node(config_node);
+
+    const std::string md_ns  = "md";
+    const std::string pds_ns = "pds";
 
     rclcpp::Node::SharedPtr md_node;
     rclcpp::Node::SharedPtr pds_node;
 
     if (launch_md)
     {
-        md_node = std::make_shared<MdNode>(rclcpp::NodeOptions(), candle, params);
+        md_node = std::make_shared<MdNode>(md_ns, rclcpp::NodeOptions(), candle, params);
         exec.add_node(md_node);
     }
 
     if (launch_pds)
     {
-        pds_node = std::make_shared<PdsNode>(rclcpp::NodeOptions(), candle, params);
+        pds_node = std::make_shared<PdsNode>(pds_ns, rclcpp::NodeOptions(), candle, params);
         exec.add_node(pds_node);
     }
 

@@ -1,12 +1,11 @@
 #include "candle_ros2/pds_modules/power_stage_ros.hpp"
 
-bool PowerStageRos::setup(std::shared_ptr<rclcpp::Node> node,
-                          mab::Pds&                     pds,
-                          mab::socketIndex_E            socket,
-                          const int                     pdsId,
-                          rclcpp::QoS&                  qos,
-                          const std::string&            nodePrefix,
-                          const int                     timerMs)
+bool PowerStageRos::setup(rclcpp::Node*      node,
+                          mab::Pds&          pds,
+                          mab::socketIndex_E socket,
+                          const int          pdsId,
+                          rclcpp::QoS&       qos,
+                          const int          timerMs)
 {
     m_parentNode = node;
 
@@ -15,19 +14,9 @@ bool PowerStageRos::setup(std::shared_ptr<rclcpp::Node> node,
         return false;
 
     pubData = m_parentNode->create_publisher<candle_ros2::msg::PowerStageData>(
-        nodePrefix + "id_" + std::to_string(pdsId) + "/" + std::string(MODULE_NAME) + "_" +
-            std::to_string(static_cast<int>(socket)),
-        qos);
+        topicName(pdsId, MODULE_NAME, socket), qos);
 
-    srvEnable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
-        nodePrefix + "id_" + std::to_string(pdsId) + "/enable_" + std::string(MODULE_NAME) + "_" +
-            std::to_string(static_cast<int>(socket)),
-        std::bind(&PowerStageRos::cbEnable, this, std::placeholders::_1, std::placeholders::_2));
-
-    srvDisable = m_parentNode->create_service<candle_ros2::srv::GenericPds>(
-        nodePrefix + "id_" + std::to_string(pdsId) + "/disable_" + std::string(MODULE_NAME) + "_" +
-            std::to_string(static_cast<int>(socket)),
-        std::bind(&PowerStageRos::cbDisable, this, std::placeholders::_1, std::placeholders::_2));
+    createEnableServices(m_powerStage.get(), pdsId, MODULE_NAME, socket);
 
     tmrPub = m_parentNode->create_wall_timer(std::chrono::milliseconds(timerMs),
                                              std::bind(&PowerStageRos::publishStatus, this));
@@ -59,25 +48,4 @@ void PowerStageRos::publishStatus()
     m_powerStage->getTemperatureLimit(msg.temperature_limit);
 
     pubData->publish(msg);
-}
-
-void PowerStageRos::cbEnable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
-                             std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
-{
-    (void)req;
-    if (m_powerStage->enable() != mab::PdsModule::error_E::OK)
-        rsp->success.push_back(false);
-    else
-        rsp->success.push_back(true);
-    return;
-}
-void PowerStageRos::cbDisable(const std::shared_ptr<candle_ros2::srv::GenericPds::Request> req,
-                              std::shared_ptr<candle_ros2::srv::GenericPds::Response>      rsp)
-{
-    (void)req;
-    if (m_powerStage->disable() != mab::PdsModule::error_E::OK)
-        rsp->success.push_back(false);
-    else
-        rsp->success.push_back(true);
-    return;
 }

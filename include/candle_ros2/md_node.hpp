@@ -21,10 +21,19 @@
 #include "candle.hpp"
 #include "MD.hpp"
 
+struct mdCmd_S
+{
+    float position;
+    float velocity;
+    float torque;
+    bool  pending;
+};
+
 class MdNode : public rclcpp::Node
 {
   public:
-    MdNode(const rclcpp::NodeOptions&   options,
+    MdNode(const std::string&           ns,
+           const rclcpp::NodeOptions&   options,
            std::shared_ptr<mab::Candle> candle,
            const candleParams_S&        params);
     ~MdNode();
@@ -32,9 +41,9 @@ class MdNode : public rclcpp::Node
   private:
     std::shared_ptr<mab::Candle> m_candle;
     std::vector<mab::MD>         m_mds;
+    std::vector<mdCmd_S>         m_cmds;
 
-    static constexpr const char* NODE_PREFIX  = "md/";
-    static constexpr int         PUB_TIMER_MS = 5;  // 200 Hz
+    static constexpr int LOOP_TIMER_MS = 5;  // 200 Hz
 
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pubJointState;
 
@@ -49,9 +58,9 @@ class MdNode : public rclcpp::Node
     rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr    srvEnable;
     rclcpp::Service<candle_ros2::srv::Generic>::SharedPtr    srvDisable;
 
-    rclcpp::TimerBase::SharedPtr tmrPub;
+    rclcpp::TimerBase::SharedPtr tmrLoop;
 
-    void publishJointStates();
+    void controlLoop();
 
     void cbMotionCmd(const candle_ros2::msg::MotionCmd& msg);
     void cbPositionCmd(const candle_ros2::msg::PositionPidCmd& msg);
@@ -69,5 +78,8 @@ class MdNode : public rclcpp::Node
     void cbDisable(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                    std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
 
+    typedef mab::MD::Error_t (mab::MD::*MdAction)();
+
+    void runOnMds(const std::vector<u16>& ids, std::vector<bool>& success, MdAction action);
     std::vector<mab::MD>::iterator findMd(std::vector<mab::MD>& mds, u16 id);
 };

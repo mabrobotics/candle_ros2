@@ -49,5 +49,6 @@ class PdsNode : public rclcpp::Node
     void cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                     std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp);
 
-    std::unique_ptr<I_BaseModuleRos> createModule(mab::moduleType_E type);
+    std::unique_ptr<I_BaseModuleRos>     createModule(mab::moduleType_E type);
+    std::vector<pdsInstance_S>::iterator findPds(u16 id);
 };

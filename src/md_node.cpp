@@ -293,22 +293,7 @@ void MdNode::cbAddMd(const std::shared_ptr<candle_ros2::srv::AddDevices::Request
 void MdNode::cbZero(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                     std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
 {
-    rsp->success.reserve(req->device_ids.size());
-
-    for (auto id : req->device_ids)
-    {
-        auto md = findMd(m_mds, id);
-        if (md == m_mds.end())
-        {
-            rsp->success.push_back(false);
-            continue;
-        }
-
-        if (md->zero() == mab::MD::Error_t::OK)
-            rsp->success.push_back(true);
-        else
-            rsp->success.push_back(false);
-    }
+    runOnMds(req->device_ids, rsp->success, &mab::MD::zero);
 }
 
 void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request> req,
@@ -367,46 +352,32 @@ void MdNode::cbSetMode(const std::shared_ptr<candle_ros2::srv::SetMode::Request>
 void MdNode::cbEnable(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                       std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
 {
-    rsp->success.reserve(req->device_ids.size());
-
-    for (auto id : req->device_ids)
-    {
-        auto md = findMd(m_mds, id);
-        if (md == m_mds.end())
-        {
-            rsp->success.push_back(false);
-            continue;
-        }
-
-        if (md->enable() == mab::MD::Error_t::OK)
-            rsp->success.push_back(true);
-        else
-            rsp->success.push_back(false);
-    }
+    runOnMds(req->device_ids, rsp->success, &mab::MD::enable);
 }
 
 void MdNode::cbDisable(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
                        std::shared_ptr<candle_ros2::srv::Generic::Response>      rsp)
 {
-    rsp->success.reserve(req->device_ids.size());
+    runOnMds(req->device_ids, rsp->success, &mab::MD::disable);
+}
 
-    for (auto id : req->device_ids)
+void MdNode::runOnMds(const std::vector<u16>& ids, std::vector<bool>& success, MdAction action)
+{
+    success.reserve(ids.size());
+
+    for (auto id : ids)
     {
         auto md = findMd(m_mds, id);
-        if (md == m_mds.end())
-        {
-            rsp->success.push_back(false);
-            continue;
-        }
-
-        if (md->disable() == mab::MD::Error_t::OK)
-            rsp->success.push_back(true);
-        else
-            rsp->success.push_back(false);
+        success.push_back(md != m_mds.end() && ((*md).*action)() == mab::MD::Error_t::OK);
     }
 }
 
 std::vector<mab::MD>::iterator MdNode::findMd(std::vector<mab::MD>& mds, u16 id)
 {
-    return std::find_if(mds.begin(), mds.end(), [id](const mab::MD& m) { return m.m_canId == id; });
+    for (auto it = mds.begin(); it != mds.end(); it++)
+    {
+        if (it->m_canId == id)
+            return it;
+    }
+    return mds.end();
 }

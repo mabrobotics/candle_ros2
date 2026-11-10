@@ -36,10 +36,7 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
     for (auto id : req->device_ids)
     {
-        if (std::any_of(m_pdsList.begin(),
-                        m_pdsList.end(),
-                        [id](const pdsInstance_S& inst)
-                        { return inst.pds && inst.pds->getCanId() == id; }))
+        if (findPds(id) != m_pdsList.end())
         {
             RCLCPP_WARN(this->get_logger(), "PDS with id %d is already added!", id);
             rsp->success.push_back(false);
@@ -135,24 +132,9 @@ void PdsNode::cbReboot(const std::shared_ptr<candle_ros2::srv::Generic::Request>
 
     for (auto id : req->device_ids)
     {
-        auto it = std::find_if(m_pdsList.begin(),
-                               m_pdsList.end(),
-                               [id](const pdsInstance_S& instance)
-                               {
-                                   if (!instance.pds)
-                                       return false;
-                                   return instance.pds->getCanId() == id;
-                               });
-
-        if (it != m_pdsList.end())
-        {
-            if (it->pds->reboot() == mab::PdsModule::error_E::OK)
-                rsp->success.push_back(true);
-            else
-                rsp->success.push_back(false);
-        }
-        else
-            rsp->success.push_back(false);
+        auto it = findPds(id);
+        rsp->success.push_back(it != m_pdsList.end() &&
+                               it->pds->reboot() == mab::PdsModule::error_E::OK);
     }
 }
 
@@ -163,28 +145,25 @@ void PdsNode::cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Reques
 
     for (auto id : req->device_ids)
     {
-        auto it = std::find_if(m_pdsList.begin(),
-                               m_pdsList.end(),
-                               [id](const pdsInstance_S& instance)
-                               {
-                                   if (!instance.pds)
-                                       return false;
-                                   return instance.pds->getCanId() == id;
-                               });
-
-        if (it != m_pdsList.end())
+        auto it = findPds(id);
+        if (it != m_pdsList.end() && it->pds->shutdown() == mab::PdsModule::error_E::OK)
         {
-            if (it->pds->shutdown() == mab::PdsModule::error_E::OK)
-            {
-                rsp->success.push_back(true);
-                m_pdsList.erase(it);
-            }
-            else
-                rsp->success.push_back(false);
+            rsp->success.push_back(true);
+            m_pdsList.erase(it);
         }
         else
             rsp->success.push_back(false);
     }
+}
+
+std::vector<pdsInstance_S>::iterator PdsNode::findPds(u16 id)
+{
+    for (auto it = m_pdsList.begin(); it != m_pdsList.end(); it++)
+    {
+        if (it->pds && it->pds->getCanId() == id)
+            return it;
+    }
+    return m_pdsList.end();
 }
 
 std::unique_ptr<I_BaseModuleRos> PdsNode::createModule(mab::moduleType_E type)

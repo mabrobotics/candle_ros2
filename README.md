@@ -36,7 +36,7 @@ For configuration, please use:
 Go to your ROS2 workspace and clone the repository:
 
 ```bash
-git clone git@github.com:mabrobotics/candle_ros2.git src/candle_ros2
+git clone https://github.com/mabrobotics/candle_ros2.git src/candle_ros2
 ```
 
 Initialize submodules:

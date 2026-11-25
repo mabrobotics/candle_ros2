@@ -20,12 +20,23 @@ For configuration, please use:
 - Manage PDS devices and their modules
 - Monitor modules such as the Control Board, Isolated Converter, Brake Resistor, and Power Stage
 
+## Supported ROS2 distributions
+
+| Distribution | Version |
+| --- | --- |
+| Lyrical | `main` |
+| Jazzy | `main` |
+| Humble | [`v2.1.2`](https://github.com/mabrobotics/candle_ros2/releases/tag/v2.1.2) (last supported) |
+
+> [!NOTE]
+> Later releases may still work on Humble, but they are not tested on it.
+
 ## Installation
 
 Go to your ROS2 workspace and clone the repository:
 
 ```bash
-git clone git@github.com:mabrobotics/candle_ros2.git src/candle_ros2
+git clone https://github.com/mabrobotics/candle_ros2.git src/candle_ros2
 ```
 
 Initialize submodules:

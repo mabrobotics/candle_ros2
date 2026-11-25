@@ -1,9 +1,10 @@
 #include "candle_ros2/pds_node.hpp"
 
-PdsNode::PdsNode(const rclcpp::NodeOptions&   options,
+PdsNode::PdsNode(const std::string&           ns,
+                 const rclcpp::NodeOptions&   options,
                  std::shared_ptr<mab::Candle> candle,
                  const candleParams_S&        params)
-    : Node("candle_pds_node", options), m_candle(candle), m_defaultQoS(10)
+    : Node("candle_pds_node", ns, options), m_candle(candle), m_defaultQoS(10)
 {
     m_defaultQoS.reliable();
 
@@ -11,13 +12,13 @@ PdsNode::PdsNode(const rclcpp::NodeOptions&   options,
         m_defaultQoS.best_effort();
 
     srvAddPds = this->create_service<candle_ros2::srv::AddDevices>(
-        std::string(NODE_PREFIX) + "add_pds",
+        "add_pds",
         std::bind(&PdsNode::cbAddPds, this, std::placeholders::_1, std::placeholders::_2));
     srvReboot = this->create_service<candle_ros2::srv::Generic>(
-        std::string(NODE_PREFIX) + "reboot_pds",
+        "reboot_pds",
         std::bind(&PdsNode::cbReboot, this, std::placeholders::_1, std::placeholders::_2));
     srvShutdown = this->create_service<candle_ros2::srv::Generic>(
-        std::string(NODE_PREFIX) + "shutdown_pds",
+        "shutdown_pds",
         std::bind(&PdsNode::cbShutdown, this, std::placeholders::_1, std::placeholders::_2));
 
     RCLCPP_INFO(this->get_logger(), "Candle ROS2 PDS node started.");
@@ -35,6 +36,13 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
     for (auto id : req->device_ids)
     {
+        if (findPds(id) != m_pdsList.end())
+        {
+            RCLCPP_WARN(this->get_logger(), "PDS with id %d is already added!", id);
+            rsp->success.push_back(false);
+            continue;
+        }
+
         pdsInstance_S instance = pdsInstance_S{};
 
         instance.pds = std::make_unique<mab::Pds>(id, m_candle.get());
@@ -58,12 +66,11 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
                                &mab::Pds::modulesSet_S::moduleTypeSocket6};
 
         auto ctrl = std::make_unique<ControlModuleRos>();
-        if (ctrl->setup(shared_from_this(),
+        if (ctrl->setup(this,
                         *instance.pds,
                         mab::socketIndex_E::UNASSIGNED,
                         id,
                         m_defaultQoS,
-                        NODE_PREFIX,
                         PUB_TIMER_MS))
             instance.modules.push_back(std::move(ctrl));
         else
@@ -80,12 +87,11 @@ void PdsNode::cbAddPds(const std::shared_ptr<candle_ros2::srv::AddDevices::Reque
 
             if (mod)
             {
-                if (mod->setup(shared_from_this(),
+                if (mod->setup(this,
                                *instance.pds,
                                static_cast<mab::socketIndex_E>(i + 1),
                                id,
                                m_defaultQoS,
-                               NODE_PREFIX,
                                PUB_TIMER_MS))
                     instance.modules.push_back(std::move(mod));
             }
@@ -126,27 +132,10 @@ void PdsNode::cbReboot(const std::shared_ptr<candle_ros2::srv::Generic::Request>
 
     for (auto id : req->device_ids)
     {
-        auto it = std::find_if(m_pdsList.begin(),
-                               m_pdsList.end(),
-                               [id](const pdsInstance_S& instance)
-                               {
-                                   if (!instance.pds)
-                                       return false;
-                                   return instance.pds->getCanId() == id;
-                               });
-
-        if (it != m_pdsList.end())
-        {
-            if (it->pds->reboot() == mab::PdsModule::error_E::OK)
-                rsp->success.push_back(true);
-            else
-                rsp->success.push_back(false);
-        }
-        else
-            rsp->success.push_back(false);
+        auto it = findPds(id);
+        rsp->success.push_back(it != m_pdsList.end() &&
+                               it->pds->reboot() == mab::PdsModule::error_E::OK);
     }
-
-    return;
 }
 
 void PdsNode::cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Request> req,
@@ -156,30 +145,25 @@ void PdsNode::cbShutdown(const std::shared_ptr<candle_ros2::srv::Generic::Reques
 
     for (auto id : req->device_ids)
     {
-        auto it = std::find_if(m_pdsList.begin(),
-                               m_pdsList.end(),
-                               [id](const pdsInstance_S& instance)
-                               {
-                                   if (!instance.pds)
-                                       return false;
-                                   return instance.pds->getCanId() == id;
-                               });
-
-        if (it != m_pdsList.end())
+        auto it = findPds(id);
+        if (it != m_pdsList.end() && it->pds->shutdown() == mab::PdsModule::error_E::OK)
         {
-            if (it->pds->shutdown() == mab::PdsModule::error_E::OK)
-            {
-                rsp->success.push_back(true);
-                m_pdsList.erase(it);
-            }
-            else
-                rsp->success.push_back(false);
+            rsp->success.push_back(true);
+            m_pdsList.erase(it);
         }
         else
             rsp->success.push_back(false);
     }
+}
 
-    return;
+std::vector<pdsInstance_S>::iterator PdsNode::findPds(u16 id)
+{
+    for (auto it = m_pdsList.begin(); it != m_pdsList.end(); it++)
+    {
+        if (it->pds && it->pds->getCanId() == id)
+            return it;
+    }
+    return m_pdsList.end();
 }
 
 std::unique_ptr<I_BaseModuleRos> PdsNode::createModule(mab::moduleType_E type)

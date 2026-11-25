@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ros_distro: [jazzy, lyrical]
+    container: ros:${{ matrix.ros_distro }}
+    steps:
+      - name: Install system dependencies
+        run: apt-get update && apt-get install -y git libusb-1.0-0-dev
+
+      - uses: actions/checkout@v4
+        with:
+          path: src/candle_ros2
+          submodules: recursive
+
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+          colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format-18
+
+      - name: Check formatting
+        run: clang-format-18 --dry-run --Werror $(git ls-files 'src/*.cpp' 'include/*.hpp')
